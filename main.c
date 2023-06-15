@@ -1,18 +1,24 @@
 #include <stdio.h>
 #include <stdbool.h> 
+#include <stdlib.h>
 
-struct station{
+struct Station{
     unsigned int pose;
     unsigned int range;
     unsigned int reachablePose;
     unsigned int aviableCar;
 };
 
+const int capacity = 20;
+struct Station** hash;
+
 /* prototypes */
 int updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, unsigned long bitMask);
 int updateCarBitMaskRemoved(unsigned int oldRange, unsigned int newRange, unsigned long  int bitMask);
 int carBitmaskOffset(unsigned int range, unsigned int carValue);
 bool isCar(unsigned int range, unsigned int carValue, unsigned int bitMask);
+void hashInsert(unsigned int pose,unsigned int range,unsigned int aviableCar);
+int hashFind(int pose);
 
 /* program */
 
@@ -58,17 +64,17 @@ void parser(){
 }
 
 int main(){
-    struct station tmp = {32,32,0,1};
-    tmp.aviableCar = tmp.aviableCar + carBitmaskOffset(tmp.range, 27);
-    tmp.aviableCar = tmp.aviableCar + carBitmaskOffset(tmp.range, 29);
-    printf("%d", tmp.aviableCar);
-        printf("\n");
-    printf("%d\n", isCar(tmp.range,32,tmp.aviableCar));
-        printf("\n");
-    printf("%d\n", isCar(tmp.range,27,tmp.aviableCar));
-        printf("\n");
-    printf("%d\n", isCar(tmp.range,23,tmp.aviableCar));
-    printf("\n");
+
+    hash = (struct Station**)malloc(sizeof(struct Station*)* capacity);
+
+    hashInsert(203, 3, 1);
+
+    printf("%d", hashFind(203));
+            printf("\n");
+    printf("%d", hashFind(202));
+            printf("\n");
+
+    printf("ciao");
 }
 
 
@@ -90,4 +96,27 @@ int carBitmaskOffset(unsigned int range, unsigned int carValue){
 bool isCar(unsigned int range, unsigned int carValue, unsigned int bitMask){
     if((power(2,range-carValue)&bitMask)!=0) return true;
     return false;
+}
+
+/* hash manage */
+
+int hashFind(int pose){
+    int hashIndex = pose % capacity;
+
+    if (hash[hashIndex] != NULL) return hashIndex;
+    
+    return -1;
+}
+
+void hashInsert(unsigned int pose,unsigned int range,unsigned int aviableCar){
+    struct Station* node = (struct Station*)malloc(sizeof(struct Station));
+    node->pose + pose;
+    node->range = range;
+    node->aviableCar =  aviableCar;
+
+    int hashIndex = pose % capacity;
+
+    if(hash[hashIndex]==NULL){
+        hash[hashIndex] = node;
+    }
 }
