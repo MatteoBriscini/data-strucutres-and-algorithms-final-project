@@ -9,8 +9,9 @@ struct Station{
     unsigned int aviableCar;
 };
 
-const int capacity = 20;
+const int capacity = 47;  //hash size
 struct Station** hash;
+struct Station* garbage;
 
 /* prototypes */
 int updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, unsigned long bitMask);
@@ -19,6 +20,7 @@ int carBitmaskOffset(unsigned int range, unsigned int carValue);
 bool isCar(unsigned int range, unsigned int carValue, unsigned int bitMask);
 void hashInsert(unsigned int pose,unsigned int range,unsigned int aviableCar);
 int hashFind(int pose);
+void hashRemove(int hashIndex);
 
 /* program */
 
@@ -68,13 +70,22 @@ int main(){
     hash = (struct Station**)malloc(sizeof(struct Station*)* capacity);
 
     hashInsert(203, 3, 1);
+    hashInsert(297, 3, 1);
 
     printf("%d", hashFind(203));
-            printf("\n");
+        printf("\n");
     printf("%d", hashFind(202));
-            printf("\n");
+        printf("\n");
+    printf("%d", hashFind(297));
+        printf("\n");
+
+    hashRemove(hashFind(297));
+
+    printf("%d", hashFind(297));
+        printf("\n");
 
     printf("ciao");
+                printf("\n");
 }
 
 
@@ -100,23 +111,40 @@ bool isCar(unsigned int range, unsigned int carValue, unsigned int bitMask){
 
 /* hash manage */
 
+
+//find an element in hash return his index
 int hashFind(int pose){
     int hashIndex = pose % capacity;
-
-    if (hash[hashIndex] != NULL) return hashIndex;
+    int relativeIndex = 0;
+    while (hash[hashIndex+relativeIndex] != NULL) {
+        if(hash[hashIndex+relativeIndex]->pose==pose)return hashIndex+relativeIndex;
+        if(relativeIndex == hashIndex)break;
+        if(relativeIndex == capacity) relativeIndex = -hashIndex;
+        relativeIndex ++;
+    };
     
     return -1;
 }
 
+//add an element to hash table (to add void station set range and avaiableCar to 0)
 void hashInsert(unsigned int pose,unsigned int range,unsigned int aviableCar){
     struct Station* node = (struct Station*)malloc(sizeof(struct Station));
-    node->pose + pose;
+    node->pose = pose;
     node->range = range;
     node->aviableCar =  aviableCar;
 
     int hashIndex = pose % capacity;
+    int relativeIndex = 0;
 
-    if(hash[hashIndex]==NULL){
-        hash[hashIndex] = node;
+    while(hash[hashIndex+relativeIndex]!=NULL){         
+        if(relativeIndex == hashIndex)break;
+        if(relativeIndex == capacity) relativeIndex = -hashIndex;
+        relativeIndex++;
     }
+
+    hash[hashIndex+relativeIndex] = node;
+}
+
+void hashRemove(int hashIndex){
+    hash[hashIndex]=garbage;
 }
