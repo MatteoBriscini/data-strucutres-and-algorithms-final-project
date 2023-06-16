@@ -8,6 +8,7 @@
         "string": "c",
         "system_error": "c",
         "thread": "c",
-        "sstream": "c"
+        "sstream": "c",
+        "array": "c"
     }
 }

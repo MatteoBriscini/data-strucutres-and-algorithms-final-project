@@ -4,10 +4,14 @@
 
 struct Station{
     unsigned int pose;
-    unsigned int range;
+    unsigned int biggestCar;
     unsigned int leftReachablePose;
     unsigned int rightReachablePose;
-    unsigned int aviableCar;
+    struct Car* aviableCar;
+};
+struct Car{
+    unsigned int avaiableCar;
+    struct Car* next;
 };
 
 const int capacity = 47;  //hash size
@@ -23,12 +27,15 @@ void addCar(char data[]);
 void removeStation(char data[]);
 void addStation(char data[]);
 
-int updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, unsigned long bitMask);
-int updateCarBitMaskRemoved(unsigned int oldRange, unsigned int newRange, unsigned long  int bitMask);
+int updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, unsigned int bitMask);
+int updateCarBitMaskRemoved(unsigned int* oldRange, unsigned int bitMask);
 int carBitmaskOffset(unsigned int range, unsigned int carValue);
-bool isCar(unsigned int range, unsigned int carValue, unsigned int bitMask);
+int isCar(unsigned int range, unsigned int carValue, unsigned int bitMask);
+void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask);
+void removeCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, unsigned int count);
+void printCars(struct Car* bitMask);
 
-void hashInsert(unsigned int pose,unsigned int range,unsigned int aviableCar);
+void hashInsert(unsigned int pose,unsigned int range);
 int hashFind(int pose);
 void hashRemove(int hashIndex);
 
@@ -41,34 +48,17 @@ void createReachablePose(int hashIndex);
 int main(){
     hash = (struct Station**)malloc(sizeof(struct Station*)* capacity);
 
-    hashInsert(203, 3, 1);
-    hashInsert(297, 3, 1);
-
-    printf("%d", hashFind(203));
-        printf("\n");
-    printf("%d", hashFind(202));
-        printf("\n");
-    printf("%d", hashFind(297));
-        printf("\n");
-
-    hashRemove(hashFind(297));
-
-    printf("%d", hashFind(297));
-        printf("\n");
-
-
+/*
     parser();
-
-    printf("ciao");
-                printf("\n");
+*/
 
 
 }
 
-unsigned int power(int base, int esp){
-    unsigned int result = 1;
+long power(int base, int esp){
+    long result = 1;
     for(int i=0;i<esp;i++){
-        result = result *base; 
+        result = result * base; 
     }
     return result;
 }
@@ -141,12 +131,13 @@ int hashFind(int pose){
     return -1;
 }
 
-//add an element to hash table (to add void station set range and avaiableCar to 0)
-void hashInsert(unsigned int pose,unsigned int range,unsigned int aviableCar){
+//add an element to hash table (to add void station set range to 0) 
+void hashInsert(unsigned int pose,unsigned int range){
     struct Station* node = (struct Station*)malloc(sizeof(struct Station));
     node->pose = pose;
-    node->range = range;
-    node->aviableCar =  aviableCar;
+    node->biggestCar = range;
+    node->aviableCar= (struct Car*)malloc(sizeof(struct Car*));
+    if(range!=0)node->aviableCar->avaiableCar= 1;
 
     int hashIndex = pose % capacity;
     int relativeIndex = 0;
@@ -166,45 +157,75 @@ void hashRemove(int hashIndex){
 
 /* car manage */
 
-//called when new car added and is bigger than range
-int updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, unsigned long bitMask){
-    return bitMask*power(2,newRange-oldRange)+1;
+//add the car to the bitMask
+void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask){
+    if(car>*range){
+        bitMask->avaiableCar = updateCarBitMaskPassed(*range, car, bitMask->avaiableCar);
+        *range = car;
+    }
+    if(isCar(*range,car,bitMask->avaiableCar) && bitMask->next==NULL){
+        bitMask->next = (struct Car*)malloc(sizeof(struct Car*));
+        return addCarAction(range,car,bitMask->next);
+    }
+    else if(isCar(*range,car,bitMask->avaiableCar) && bitMask->next!=NULL){
+        return addCarAction(range,car,bitMask->next);
+    }
+    bitMask->avaiableCar = (unsigned int) bitMask->avaiableCar + carBitmaskOffset(*range, car);
 }
-//call when bigger car is been removed
-int updateCarBitMaskRemoved(unsigned int oldRange, unsigned int newRange, unsigned long  int bitMask){
-    return (bitMask-1)/power(2,oldRange-newRange);
+
+//remove the car from the bitmask (didn't controll if the car is present)
+void removeCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, unsigned int count){
+    if(bitMask->next!=NULL && isCar(*range,car,bitMask->next->avaiableCar)){
+        removeCarAction(range, car, bitMask->next, count+1);
+        if(bitMask->next->avaiableCar==0){
+            free(bitMask->next);
+            bitMask->next=NULL;
+        }
+        return;
+    }
+    bitMask->avaiableCar = (unsigned int) bitMask->avaiableCar - carBitmaskOffset(*range, car);
+    if(car==*range){
+        if(count==0 && bitMask->avaiableCar == 0){
+            *range=0;
+            return;
+        }
+        bitMask->avaiableCar = updateCarBitMaskRemoved(range, bitMask->avaiableCar);
+    }
+}
+
+void printCars(struct Car* bitMask){
+    printf ("%d ", bitMask->avaiableCar);
+    if(bitMask->next!=NULL) return printCars(bitMask->next);
+    printf("\n");
+}
+
+//called when new car added and is bigger than range
+int updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, unsigned int bitMask){
+    return bitMask*power(2,newRange-oldRange);
+}
+//call when biggest car is been removed
+int updateCarBitMaskRemoved(unsigned int* oldRange, unsigned int bitMask){
+   unsigned int tmp = *oldRange;
+   unsigned int newRange = tmp-1;
+
+   while (newRange>0){ 
+        if(isCar(tmp, newRange, bitMask)==1){
+            *oldRange = newRange;
+            break;
+        }
+        else newRange= newRange-1;
+    }
+    //printf("%d \n", power(2,tmp-newRange));
+    return (bitMask)/power(2,tmp-newRange);
 }
 //offeset to update bitMask when car added or remove [if add bitMask = bitMask + offset | if remove bitMask = bitMask - offset ]
 int carBitmaskOffset(unsigned int range, unsigned int carValue){
     return power(2,range-carValue);
 }
 //to verify if there is the car in the aviableCard bitMask 
-bool isCar(unsigned int range, unsigned int carValue, unsigned int bitMask){
-    if((power(2,range-carValue)&bitMask)!=0) return true;
-    return false;
+int isCar(unsigned int range, unsigned int carValue, unsigned int bitMask){
+    if((power(2,range-carValue)&bitMask)!=0) return 1;
+    return 0;
 }
 
 /* reachable pose manage */
-
-void createReachablePose(int hashIndex){
-    struct Station* tmp = hash[hashIndex];
-
-    //left reachable
-    int i = tmp->pose - tmp->range;
-    if(i<0)i=0;
-    unsigned int reachable=0;
-
-    for(int j= 0;j<tmp->range;j++){
-        if(hashFind(i)!=-1) reachable =  reachable + power(2,tmp->pose-1-j);
-        i++;
-    }
-
-    i = tmp->pose + tmp->range;
-    reachable=0;
-    for(int j= 0;j<tmp->range;j++){
-        if(hashFind(i)!=-1) reachable =  reachable + power(2,tmp->pose-1-j);
-        i--;
-    }    
-
-    free(tmp);
-}
