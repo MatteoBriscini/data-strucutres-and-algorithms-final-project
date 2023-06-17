@@ -27,8 +27,8 @@ void addCar(char data[]);
 void removeStation(char data[]);
 void addStation(char data[]);
 
-int updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, unsigned int bitMask);
-int updateCarBitMaskRemoved(unsigned int* oldRange, unsigned int bitMask);
+void updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, struct Car* bitMask);
+void updateCarBitMaskRemoved(unsigned int* oldRange, struct Car* bitMask);
 int carBitmaskOffset(unsigned int range, unsigned int carValue);
 int isCar(unsigned int range, unsigned int carValue, unsigned int bitMask);
 void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask);
@@ -160,7 +160,7 @@ void hashRemove(int hashIndex){
 //add the car to the bitMask
 void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask){
     if(car>*range){
-        bitMask->avaiableCar = updateCarBitMaskPassed(*range, car, bitMask->avaiableCar);
+        updateCarBitMaskPassed(*range, car, bitMask);
         *range = car;
     }
     if(isCar(*range,car,bitMask->avaiableCar) && bitMask->next==NULL){
@@ -189,7 +189,7 @@ void removeCarAction(unsigned int* range, unsigned int car, struct Car* bitMask,
             *range=0;
             return;
         }
-        bitMask->avaiableCar = updateCarBitMaskRemoved(range, bitMask->avaiableCar);
+        updateCarBitMaskRemoved(range, bitMask);
     }
 }
 
@@ -200,23 +200,28 @@ void printCars(struct Car* bitMask){
 }
 
 //called when new car added and is bigger than range
-int updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, unsigned int bitMask){
-    return bitMask*power(2,newRange-oldRange);
+void updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, struct Car* bitMask){
+    bitMask->avaiableCar = (bitMask->avaiableCar)*power(2,newRange-oldRange);
+    if(bitMask->next!=NULL)return updateCarBitMaskPassed(oldRange,newRange,bitMask->next);
+}
+void updateCarRemovedSupport(unsigned int oldeRange, unsigned int newRange, struct Car* bitMask){
+    bitMask->avaiableCar = (bitMask->avaiableCar)/power(2,oldeRange-newRange);
+    if(bitMask->next!=NULL)return updateCarRemovedSupport(oldeRange, newRange, bitMask->next);
 }
 //call when biggest car is been removed
-int updateCarBitMaskRemoved(unsigned int* oldRange, unsigned int bitMask){
+void updateCarBitMaskRemoved(unsigned int* oldRange, struct Car* bitMask){
    unsigned int tmp = *oldRange;
    unsigned int newRange = tmp-1;
 
    while (newRange>0){ 
-        if(isCar(tmp, newRange, bitMask)==1){
+        if(isCar(tmp, newRange, bitMask->avaiableCar)==1){
             *oldRange = newRange;
             break;
         }
         else newRange= newRange-1;
     }
     //printf("%d \n", power(2,tmp-newRange));
-    return (bitMask)/power(2,tmp-newRange);
+    return updateCarRemovedSupport(tmp, *oldRange, bitMask);
 }
 //offeset to update bitMask when car added or remove [if add bitMask = bitMask + offset | if remove bitMask = bitMask - offset ]
 int carBitmaskOffset(unsigned int range, unsigned int carValue){
