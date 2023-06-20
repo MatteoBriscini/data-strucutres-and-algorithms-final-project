@@ -50,67 +50,110 @@ int main(){
     hash = (struct Station**)malloc(sizeof(struct Station*)* capacity);
 
     parser();
-
-
-}
-
-int spaceFinder(char string[]){
-    for(int i=0;string[i]!='\0';i++){
-        if(string[i]==' ')return i;
-    }
-    return -1;
-}
-int str_length(char* data) {
-    int count;   
-    for (count = 0; *(data+count+1) != '\0'; ++count);
-    return count; 
 }
 
 /* parser */
 
 void addCarSupport(int station, char *data){
-    printf(data);
-    printf("%d", station);
+    char* car = (char*)malloc(sizeof(char));
+    int i=0;
+    do{
+        car[i] = *(data);
+        i++;
+        data = data +1;
+        if(*(data) == ' ')break;
+        car = (char*)realloc(car, (i+1) *sizeof(char));
+    }while((*(data+1)!='\0'));
+
+    struct Station* node = hashTake(station);
+    unsigned int* range =  &node->biggestCar;
+    addCarAction(range, atoi(car), node->aviableCar);
+
+    //printf("%d: %d",node->biggestCar,node->aviableCar->avaiableCar);
+
+    free(car);
+    if(*data == ' ') return addCarSupport(station, data+1);
 }
 
 void addStation(char* data){ //aggiungi-stazione
-    int space = spaceFinder(data);
-    int length;
-    if(space==-1)length = str_length(data);
-    else length = space;
-    char input[length];
+    char* input = (char*)malloc(sizeof(char));
     int i=0;
     do{
-        input[i] = *(data+i);
-        if (i+1==space)break;
+        input[i] = *(data);
         i++;
-    }while(*(data+i+1)!='\0');
-    printf("%d", atoi(input));
+        data = data +1;
+        if(*(data) == ' ')break;
+        input = (char*)realloc(input, (i+1) *sizeof(char));
+    }while((*(data+1)!='\0'));
     if(hashFind(atoi(input))!= -1){ printf("non aggiunta\n"); return;}
     hashInsert(atoi(input), 0);
-    printf("aggiunta\n");
-    if(space!=-1){
-        data = data +1;
-        addCarSupport(atoi(input), data);
+    if(*data == ' '){
+        addCarSupport(atoi(input), data+1);
     }
+    free(input);
+    printf("aggiunta\n");
 } 
 
 void removeStation(char* data){ //demolisci-stazione
     int pose = atoi(data);
     if(hashFind(pose)!=-1){
-        hashRemove(pose);
-        printf("demolita");
+        hashRemove(hashFind(pose));
+        printf("demolita\n");
     }
-    else printf("non demolita");
+    else printf("non demolita\n");
 } 
 
 void addCar(char* data){ //aggiungi-auto
+    char* station = (char*)malloc(sizeof(char));
+    int i=0;
+    do{
+        station[i] = *(data);
+        i++;
+        data = data +1;
+        if(*(data) == ' ')break;
+        station = (char*)realloc(station, (i+1) *sizeof(char));
+    }while((*(data+1)!='\0'));
+    if(hashFind(atoi(station))== -1){ printf("non aggiunta\n"); return;}
+    addCarSupport(atoi(station), data+1);
 
+    free(station);
+    printf("aggiunta\n");
 }
 void removeCar(char* data){ //rottama-auto
+    char* station = (char*)malloc(sizeof(char));
+    int i=0;
+    do{
+        station[i] = *(data);
+        i++;
+        data = data +1;
+        if(*(data) == ' ')break;
+        station = (char*)realloc(station, (i+1) *sizeof(char));
+    }while((*(data+1)!='\0'));
+    if(hashFind(atoi(station))== -1){ printf("non rottamata\n"); return;}
 
+    char* car = (char*)malloc(sizeof(char));
+    i=0;
+    do{
+        car[i] = *(data);
+        i++;
+        data = data +1;
+        if(*(data) == ' ')break;
+        car = (char*)realloc(car, (i+1) *sizeof(char));
+    }while((*(data+1)!='\0'));
+
+    struct Station* node = hashTake(atoi(station));
+
+    printf("%d: %d\n",node->biggestCar,node->aviableCar->avaiableCar);
+
+    unsigned int* range =  &node->biggestCar;
+    if(isCar(node->biggestCar, atoi(car), node->aviableCar->avaiableCar)==0){ printf("non rottamata\n"); return;}
+    removeCarAction(range, atoi(car), node->aviableCar, 0);
+
+    printf("%d: %d\n",node->biggestCar,node->aviableCar->avaiableCar);
+    printf("rottamata\n");
+
+    free(station);
 }
-
 void path(char* data){ //pianifica-percorso
 
 }
