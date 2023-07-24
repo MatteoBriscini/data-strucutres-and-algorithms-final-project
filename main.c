@@ -35,7 +35,7 @@ void updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, struct 
 void updateCarBitMaskRemoved(unsigned int* oldRange, struct Car* bitMask);
 int carBitmaskOffset(unsigned int range, unsigned int carValue);
 int isCar(unsigned int range, unsigned int carValue, unsigned int bitMask);
-void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask);
+void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, unsigned int stationPose);
 void removeCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, unsigned int count);
 void printCars(struct Car* bitMask);
 
@@ -45,6 +45,8 @@ struct Station* hashTake(int pose);
 void hashRemove(int hashIndex);
 
 void reachMeInit(struct Station* station);
+void ReachMeUpdate(unsigned int oldRange, unsigned int newRange, unsigned int pose);
+void printStationHash();
 
 
 /* program */
@@ -72,7 +74,7 @@ void addCarSupport(int station, char *data){
 
     struct Station* node = hashTake(station);
     unsigned int* range =  &node->biggestCar;
-    addCarAction(range, atoi(car), node->aviableCar);
+    addCarAction(range, atoi(car), node->aviableCar, node->pose);
 
     free(car);
     if(*data == ' ') return addCarSupport(station, data+1);
@@ -90,7 +92,7 @@ void addStation(char* data){ //aggiungi-stazione
     }while((*(data+1)!='\0'));
     if(hashFind(atoi(input))!= -1){ printf("non aggiunta\n"); return;}
 
-    printf("%d\n", atoi(input));
+    //printf("%d\n", atoi(input));
 
     reachMeInit(hashInsert(atoi(input)));
 
@@ -174,7 +176,9 @@ void path(char* data){ //pianifica-percorso
     
     printf("%d %d\n",start,  end);
 
-    //reachMeInit(hashTake(start));
+    free(num);
+    
+    printStationHash();
 }
 
 //read input and call correct function
@@ -257,17 +261,18 @@ void hashRemove(int hashIndex){
 /* car manage */
 
 //add the car to the bitMask
-void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask){
+void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, unsigned int stationPose){
     if(car>*range){
         updateCarBitMaskPassed(*range, car, bitMask);
+        ReachMeUpdate(*range, car, stationPose);
         *range = car;
     }
     if(isCar(*range,car,bitMask->avaiableCar) && bitMask->next==NULL){
         bitMask->next = (struct Car*)malloc(sizeof(struct Car*));
-        return addCarAction(range,car,bitMask->next);
+        return addCarAction(range,car,bitMask->next, stationPose);
     }
     else if(isCar(*range,car,bitMask->avaiableCar) && bitMask->next!=NULL){
-        return addCarAction(range,car,bitMask->next);
+        return addCarAction(range,car,bitMask->next, stationPose);
     }
     bitMask->avaiableCar = (unsigned int) bitMask->avaiableCar + carBitmaskOffset(*range, car);
 }
@@ -332,7 +337,7 @@ int isCar(unsigned int range, unsigned int carValue, unsigned int bitMask){
 }
 
 /* reachable pose manage */
-void reachMeInit(struct Station* station){
+void reachMeInit(struct Station* station){ //when a new station is added its bitmusk must be created
     for(int i= 0; i < capacity; i++){
         if(hash[i] != NULL){
                 if(hash[i]->pose < station->pose){ //left update
@@ -353,6 +358,41 @@ void reachMeInit(struct Station* station){
                 }
         }
     }
-    printf("maxRight: %d; rightBitMask: %d\n", station->rightMax, station->rightReachMePose);
-    printf("minleft: %d; rightBitMask: %d\n", station->leftMin, station->leftReachMePose);
+}
+
+/*
+    idealmente verrebbe richiamata quando viene aggiunto un veicolo e il range e` superato 
+    unico problema nei metodi di aggiunta del veicolo non ho ha disposizione la pose della stazione 
+*/
+void ReachMeUpdate(unsigned int oldRange, unsigned int newRange, unsigned int pose){  
+    int tmp=pose+oldRange-newRange;
+    if(tmp<0){tmp=0;}
+    for(int i = tmp; i<pose; i++){//left update
+        if(hashFind(i)!=-1){
+            struct Station* node = hashTake(i);            
+            node->rightReachMePose = (unsigned int) node->rightReachMePose + (1<< (pose-i-1));
+            if(node->rightMax<pose){
+                node->rightMax = pose;
+            }
+            //printf("updated left: %d, %d, %d, %d\n", pose, i, node->rightReachMePose, node->rightMax);
+        }
+    }
+    for(int i = pose+newRange; i>pose+oldRange; i--){//right update
+        if(hashFind(i)!=-1){
+            struct Station* node = hashTake(i);
+            node->leftReachMePose = (unsigned int) node->leftReachMePose + (1<< (i-pose-1));
+            if(node->leftMin>pose){
+                node->leftMin=pose;
+            }
+            //printf("updated right: %d, %d, %d, %d\n", pose, i, node->leftReachMePose, node->leftMin);
+        }
+    }
+}
+
+void printStationHash(){
+    for(int i=0; i< capacity; i++){
+        if(hash[i]!=NULL){
+            printf("pose: %d rb:%d lb:%d\n", hash[i]->pose, hash[i]->rightReachMePose, hash[i]-> leftReachMePose);
+        }
+    }
 }
