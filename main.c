@@ -265,7 +265,8 @@ struct Station* hashInsert(unsigned int pose){
 }
 
 void hashRemove(int hashIndex){
-    hash[hashIndex]=garbage;
+    free(hash[hashIndex]);
+    hash[hashIndex]=NULL;
 }
 
 /* car manage */
