@@ -5,7 +5,7 @@
 struct Station{
     unsigned int pose;
 
-    unsigned int leftMin;
+    int leftMin;
     unsigned int leftReachMePose;
     unsigned int rightMax;
     unsigned int rightReachMePose;
@@ -18,7 +18,7 @@ struct Car{
     struct Car* next;
 };
 
-int capacity = 47;  //hash size
+int capacity = 2129;  //hash size
 struct Station** hash;
 struct Station* garbage;
 
@@ -48,6 +48,8 @@ void reachMeInit(struct Station* station);
 void ReachMeUpdate(unsigned int oldRange, unsigned int newRange, unsigned int pose);
 void printStationHash();
 
+void growFirstStep(unsigned int start, unsigned int end);
+void gorwQuadraticaly(unsigned int  start, unsigned int end, unsigned int* result);
 
 /* program */
 
@@ -57,6 +59,9 @@ int main(){
     hash = (struct Station**)malloc(sizeof(struct Station*)* capacity);
 
     parser();
+    
+    //printStationHash();
+    return 0;
 }
 
 /* parser */
@@ -72,9 +77,11 @@ void addCarSupport(int station, char *data){
         car = (char*)realloc(car, (i+1) *sizeof(char));
     }while((*(data+1)!='\0'));
 
-    struct Station* node = hashTake(station);
-    unsigned int* range =  &node->biggestCar;
-    addCarAction(range, atoi(car), node->aviableCar, node->pose);
+    if(atoi(car)!=0){
+        struct Station* node = hashTake(station);
+        unsigned int* range =  &node->biggestCar;
+        addCarAction(range, atoi(car), node->aviableCar, node->pose);
+    }
 
     free(car);
     if(*data == ' ') return addCarSupport(station, data+1);
@@ -161,8 +168,8 @@ void removeCar(char* data){ //rottama-auto
 }
 void path(char* data){ //pianifica-percorso
     char* num = (char*)malloc(sizeof(char));
-    int start = 0;
-    int end = 0;
+    unsigned int start = 0;
+    unsigned int end = 0;
     int i=0;
     do{
         num[i] =  *(data);
@@ -174,11 +181,12 @@ void path(char* data){ //pianifica-percorso
     start = atoi(num);
     end = atoi(data);
     
-    printf("%d %d\n",start,  end);
+    if(start<end){growFirstStep(start,end);}
+    else{printf("nessun percorso\n");}
 
     free(num);
     
-    printStationHash();
+
 }
 
 //read input and call correct function
@@ -189,6 +197,7 @@ void parser(){
         if(fgets(input, sizeof(input), stdin) == NULL){
             return;
         }
+        printf("%s\n",input); //stampa input
         if(input[0] == 'p'){
             path(pointer+19);
         }else if (input[0] == 'a'){
@@ -239,6 +248,7 @@ struct Station* hashInsert(unsigned int pose){
     node->pose = pose;
     node->leftReachMePose = 0;
     node->rightReachMePose = 0;
+    node->leftMin =-1;
     node->aviableCar= (struct Car*)malloc(sizeof(struct Car*));
 
     int hashIndex = pose % capacity;
@@ -360,11 +370,26 @@ void reachMeInit(struct Station* station){ //when a new station is added its bit
     }
 }
 
-/*
-    idealmente verrebbe richiamata quando viene aggiunto un veicolo e il range e` superato 
-    unico problema nei metodi di aggiunta del veicolo non ho ha disposizione la pose della stazione 
-*/
-void ReachMeUpdate(unsigned int oldRange, unsigned int newRange, unsigned int pose){  
+void ReachMeUpdate(unsigned int oldRange, unsigned int newRange, unsigned int pose){//update the bitmusk off al the station
+    if(oldRange-newRange>capacity){
+        for(int i=0;i<capacity;i++){
+            if(hash[i]!=NULL){
+                if(hash[i]->pose>=(pose-newRange)&&hash[i]->pose<(pose-oldRange)){//left update
+                    hash[i]->rightReachMePose = (unsigned int) hash[i]->rightReachMePose + (1<< (pose-i-1));
+                    if(hash[i]->rightMax<pose){
+                        hash[i]->rightMax = pose;
+                    }
+                }
+                if(hash[i]->pose<=(pose+newRange)&&hash[i]->pose>(pose+oldRange)){//right update
+                    hash[i]->leftReachMePose = (unsigned int) hash[i]->leftReachMePose + (1<< (i-pose-1));
+                    if(hash[i]->leftMin>pose){
+                        hash[i]->leftMin = pose;
+                    }
+                }
+            }
+        }
+        return;
+    }
     int tmp=pose+oldRange-newRange;
     if(tmp<0){tmp=0;}
     for(int i = tmp; i<pose; i++){//left update
@@ -382,7 +407,7 @@ void ReachMeUpdate(unsigned int oldRange, unsigned int newRange, unsigned int po
             struct Station* node = hashTake(i);
             node->leftReachMePose = (unsigned int) node->leftReachMePose + (1<< (i-pose-1));
             if(node->leftMin>pose){
-                node->leftMin=pose;
+                node->leftMin = pose;
             }
             //printf("updated right: %d, %d, %d, %d\n", pose, i, node->leftReachMePose, node->leftMin);
         }
@@ -392,7 +417,58 @@ void ReachMeUpdate(unsigned int oldRange, unsigned int newRange, unsigned int po
 void printStationHash(){
     for(int i=0; i< capacity; i++){
         if(hash[i]!=NULL){
-            printf("pose: %d rb:%d lb:%d\n", hash[i]->pose, hash[i]->rightReachMePose, hash[i]-> leftReachMePose);
+            printf("pose: %d rb:%d rMax:%d lb:%d lMin:%d\n", hash[i]->pose, 
+                hash[i]->rightReachMePose, hash[i]->rightMax ,
+                hash[i]-> leftReachMePose, hash[i]->leftMin);
         }
     }
+}
+
+void correctLeftMin(struct Station* station){
+    station->leftReachMePose=station->leftReachMePose-(1<<((station->pose-1)-(station->leftMin)));
+    int i;
+    for(i=(station->pose-2)-(station->leftMin); i>=0; i--){
+        if (((1<<i)&station->leftReachMePose)!=0){
+            if(hashFind(station->pose-1-i)!=-1)break;
+        }
+    }
+    if(station->leftReachMePose==0){station->leftMin=-1;}
+    else{station->leftMin=station->pose-1-i;}
+}
+
+/* plan route */
+
+
+
+void growFirstStep(unsigned int start, unsigned int end){
+    if(hashTake(end)->leftMin==start){//if you can reach directly
+        printf("%d %d\n", start, end);
+        return;
+    }
+    unsigned int result=0;
+    int i=end;
+    while (true){
+        if(hashTake(i)->leftMin==-1){//if you can't move
+            printf("nessun percorso\n");
+            return;
+        }
+        if(hashFind(hashTake(i)->leftMin)==-1){//if the selected station was removed
+            correctLeftMin(hashTake(i));
+            if(hashTake(i)->leftMin==-1){//if you can't move
+                printf("nessun percorso\n");
+                return;
+            }
+        }
+        i=hashTake(i)->leftMin;
+        result=result+(1<<(end-i-1));
+        if(hashTake(i)->leftMin<=start){
+            break;
+        }
+    }
+    //printf("res:%d act:%d\n", result, i);
+    if(i!=start)gorwQuadraticaly(start, i, &result);
+}
+
+void gorwQuadraticaly(unsigned int  start, unsigned int end, unsigned int* result){
+    printf("nessun percorso\n");
 }
