@@ -14,7 +14,7 @@ struct Station{
     struct Car* aviableCar;
 };
 struct Car{
-    unsigned int avaiableCar;
+    unsigned long avaiableCar;
     struct Car* next;
 };
 
@@ -23,13 +23,14 @@ struct Station** hash;
 struct Station* garbage;
 
 /* prototypes */
+void ignoreAllTheLine();
 void parser();
 char parserSupport(int index, char string[]);
-void path(char data[]);
-void removeCar(char data[]);
-void addCar(char data[]);
-void removeStation(char data[]);
-void addStation(char data[]);
+void path();
+void removeCar();
+void addCar();
+void removeStation();
+void addStation();
 
 void updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, struct Car* bitMask);
 void updateCarBitMaskRemoved(unsigned int* oldRange, struct Car* bitMask);
@@ -66,52 +67,55 @@ int main(){
 
 /* parser */
 
-void addCarSupport(int station, char *data){
+void addCarSupport(int station){
+    char tmp;
     char* car = (char*)malloc(sizeof(char));
     int i=0;
     do{
-        car[i] = *(data);
+        tmp = getc(stdin);
+        car[i] = tmp;
         i++;
-        data = data +1;
-        if(*(data) == ' ')break;
+        if(tmp == ' '){
+            addCarSupport(station);
+            break;
+            }
         car = (char*)realloc(car, (i+1) *sizeof(char));
-    }while((*(data+1)!='\0'));
+    }while((tmp!='\n'));
+    //printf("%d\n",atoi(car));
 
     if(atoi(car)!=0){
         struct Station* node = hashTake(station);
         unsigned int* range =  &node->biggestCar;
         addCarAction(range, atoi(car), node->aviableCar, node->pose);
     }
-
     free(car);
-    if(*data == ' ') return addCarSupport(station, data+1);
 }
 
-void addStation(char* data){ //aggiungi-stazione
+void addStation(){ //aggiungi-stazione
+    char tmp;
     char* input = (char*)malloc(sizeof(char));
     int i=0;
     do{
-        input[i] = *(data);
+        tmp=fgetc(stdin);
+        if(tmp== ' ' || tmp=='\n'){
+            if(hashFind(atoi(input))!= -1){ printf("non aggiunta\n"); return;}
+            reachMeInit(hashInsert(atoi(input)));
+            if(tmp== ' ')addCarSupport(atoi(input));
+            break;
+        }
+        input[i] = tmp;
         i++;
-        data = data +1;
-        if(*(data) == ' ')break;
         input = (char*)realloc(input, (i+1) *sizeof(char));
-    }while((*(data+1)!='\0'));
-    if(hashFind(atoi(input))!= -1){ printf("non aggiunta\n"); return;}
+    }while(tmp!='\n');
 
-    //printf("%d\n", atoi(input));
-
-    reachMeInit(hashInsert(atoi(input)));
-
-    if(*data == ' '){
-        addCarSupport(atoi(input), data+1);
-    }
     free(input);
     printf("aggiunta\n");
 } 
 
-void removeStation(char* data){ //demolisci-stazione
-    int pose = atoi(data);
+void removeStation(){ //demolisci-stazione
+    char input[15];
+    if(fgets(input, sizeof(input), stdin)==NULL)return;    
+    int pose = atoi(input);
     if(hashFind(pose)!=-1){
         hashRemove(hashFind(pose));
         printf("demolita\n");
@@ -119,43 +123,57 @@ void removeStation(char* data){ //demolisci-stazione
     else printf("non demolita\n");
 } 
 
-void addCar(char* data){ //aggiungi-auto
+void addCar(){ //aggiungi-auto
+    char tmp;
     char* station = (char*)malloc(sizeof(char));
     int i=0;
     do{
-        station[i] = *(data);
+        tmp = fgetc(stdin);
+        station[i] = tmp;
         i++;
-        data = data +1;
-        if(*(data) == ' ')break;
+        if(tmp == ' ')break;
         station = (char*)realloc(station, (i+1) *sizeof(char));
-    }while((*(data+1)!='\0'));
-    if(hashFind(atoi(station))== -1){ printf("non aggiunta\n"); return;}
-    addCarSupport(atoi(station), data+1);
+    }while(tmp!='\0');
+    if(hashFind(atoi(station))== -1){
+        ignoreAllTheLine();
+        printf("non aggiunta\n"); 
+        return;
+    }
+    addCarSupport(atoi(station));
+
+    //printf("%d\n", atoi(station));
 
     free(station);
     printf("aggiunta\n");
 }
-void removeCar(char* data){ //rottama-auto
+void removeCar(){ //rottama-auto
+    char input;
     char* station = (char*)malloc(sizeof(char));
     int i=0;
     do{
-        station[i] = *(data);
+        input=fgetc(stdin);
+        if(input == ' ')break;
+        station[i] = input;
         i++;
-        data = data +1;
-        if(*(data) == ' ')break;
         station = (char*)realloc(station, (i+1) *sizeof(char));
-    }while((*(data+1)!='\0'));
-    if(hashFind(atoi(station))== -1){ printf("non rottamata\n"); return;}
+    }while(input!='\n');
+    if(hashFind(atoi(station))== -1){ 
+        ignoreAllTheLine();
+        printf("non rottamata\n"); 
+        return;
+        }
 
     char* car = (char*)malloc(sizeof(char));
     i=0;
     do{
-        car[i] = *(data);
+        input =  fgetc(stdin);
+        if(input == ' ')break;
+        car[i] = input;
         i++;
-        data = data +1;
-        if(*(data) == ' ')break;
         car = (char*)realloc(car, (i+1) *sizeof(char));
-    }while((*(data+1)!='\0'));
+    }while(input!='\n');
+
+    //printf("%d %d\n", atoi(station), atoi(car));
 
     struct Station* node = hashTake(atoi(station));
 
@@ -165,51 +183,72 @@ void removeCar(char* data){ //rottama-auto
     printf("rottamata\n");
 
     free(station);
+    free(car);
 }
-void path(char* data){ //pianifica-percorso
+void path(){ //pianifica-percorso
+    char input[15];
     char* num = (char*)malloc(sizeof(char));
     unsigned int start = 0;
     unsigned int end = 0;
     int i=0;
     do{
-        num[i] =  *(data);
+        input[0] = fgetc(stdin);
+        if(input[0] == ' ')break;
+        num[i] =  input[0];
         i++;
-        data = data +1;
-        if(*(data) == ' ')break;
         num = (char*)realloc(num, (i+1) *sizeof(char));
-    }while((*(data+1)!='\0'));
+    }while((input[0] !='\n'));
     start = atoi(num);
-    end = atoi(data);
+    if(fgets(input, sizeof(input), stdin)==NULL)return;  
+    end=atoi(input);
     
+    //printf("%d %d\n", start, end);
+
     if(start<end){growFirstStep(start,end);}
     else{printf("nessun percorso\n");}
 
     free(num);
-    
-
 }
 
+void ignoreChar(int number){
+    for(int i=0; i<number;i++)getc(stdin);
+}
+void ignoreAllTheLine(){
+    while (fgetc(stdin)!='\n'){}
+}
 //read input and call correct function
 void parser(){
+    char input;
     while (1){
-        char input[255];
-        char *pointer = input; 
-        if(fgets(input, sizeof(input), stdin) == NULL){
-            return;
+        input=fgetc(stdin);
+        if(input==EOF)return;
+        printf("%c\n", input);
+
+        if(input=='a'){
+            ignoreChar(8);
+            input=fgetc(stdin);
+            if(input=='s'){         //aggiungi-stazione
+                printf("stazione\n");
+                ignoreChar(8);
+                addStation();
+            }
+            else{                   //aggiungi-auto
+                printf("auto\n");
+                ignoreChar(4);
+                addCar();
+            }
+        }else if(input== 'p'){      //pianifica-percorso
+            ignoreChar(18);
+            path();
+        }else if (input=='d'){      //demolisci-stazione
+            ignoreChar(18);
+            removeStation();
+        }else {                   //rimuovi-auto
+            ignoreChar(12);
+            removeCar();
         }
-        printf("%s\n",input); //stampa input
-        if(input[0] == 'p'){
-            path(pointer+19);
-        }else if (input[0] == 'a'){
-            if(input[9]=='s')addStation(pointer+18);
-            else addCar(pointer+14);
-        }else if(input[0] == 'd'){
-            removeStation(pointer+19);
-        }else{
-            removeCar(pointer+13);
-        }
+
     }
-    
 }
 
 /* hash manage */
@@ -278,14 +317,17 @@ void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, un
         ReachMeUpdate(*range, car, stationPose);
         *range = car;
     }
-    if(isCar(*range,car,bitMask->avaiableCar) && bitMask->next==NULL){
+    if(bitMask->next==NULL && isCar(*range,car,bitMask->avaiableCar)==1){
         bitMask->next = (struct Car*)malloc(sizeof(struct Car*));
+        bitMask->next->avaiableCar =0;
+        bitMask->next->next=NULL;
         return addCarAction(range,car,bitMask->next, stationPose);
     }
-    else if(isCar(*range,car,bitMask->avaiableCar) && bitMask->next!=NULL){
+    else if(bitMask->next!=NULL && isCar(*range,car,bitMask->avaiableCar)==1){
         return addCarAction(range,car,bitMask->next, stationPose);
     }
     bitMask->avaiableCar = (unsigned int) bitMask->avaiableCar + carBitmaskOffset(*range, car);
+    //printf("%d %lu \n", stationPose, bitMask->avaiableCar);
 }
 
 //remove the car from the bitmask (didn't controll if the car is present)
@@ -309,7 +351,7 @@ void removeCarAction(unsigned int* range, unsigned int car, struct Car* bitMask,
 }
 
 void printCars(struct Car* bitMask){
-    printf ("%d ", bitMask->avaiableCar);
+    printf ("| %lu |", bitMask->avaiableCar);
     if(bitMask->next!=NULL) return printCars(bitMask->next);
     printf("\n");
 }
