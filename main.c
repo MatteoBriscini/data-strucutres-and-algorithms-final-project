@@ -18,7 +18,7 @@ struct Car{
     struct Car* next;
 };
 
-int capacity = 2129;  //hash size
+int capacity = 17191;  //hash size
 struct Station** hash;
 struct Station* garbage;
 
@@ -67,7 +67,7 @@ int main(){
 
 /* parser */
 
-void addCarSupport(int station){
+void addCarSupport(struct Station* station){
     char tmp;
     char* car = (char*)malloc(sizeof(char));
     int i=0;
@@ -84,9 +84,8 @@ void addCarSupport(int station){
     //printf("%d\n",atoi(car));
 
     if(atoi(car)!=0){
-        struct Station* node = hashTake(station);
-        unsigned int* range =  &node->biggestCar;
-        addCarAction(range, atoi(car), node->aviableCar, node->pose);
+        unsigned int* range =  &station->biggestCar;
+        addCarAction(range, atoi(car), station->aviableCar, station->pose);
     }
     free(car);
 }
@@ -98,9 +97,10 @@ void addStation(){ //aggiungi-stazione
     do{
         tmp=fgetc(stdin);
         if(tmp== ' ' || tmp=='\n'){
-            if(hashFind(atoi(input))!= -1){ printf("non aggiunta\n"); return;}
-            reachMeInit(hashInsert(atoi(input)));
-            if(tmp== ' ')addCarSupport(atoi(input));
+            struct Station* node = hashInsert(atoi(input));
+            if(node==NULL)return;
+            reachMeInit(node);
+            if(tmp== ' ')addCarSupport(node);
             break;
         }
         input[i] = tmp;
@@ -116,8 +116,9 @@ void removeStation(){ //demolisci-stazione
     char input[15];
     if(fgets(input, sizeof(input), stdin)==NULL)return;    
     int pose = atoi(input);
-    if(hashFind(pose)!=-1){
-        hashRemove(hashFind(pose));
+    pose=hashFind(pose);
+    if(pose!=-1){
+        hashRemove(pose);
         printf("demolita\n");
     }
     else printf("non demolita\n");
@@ -134,12 +135,13 @@ void addCar(){ //aggiungi-auto
         if(tmp == ' ')break;
         station = (char*)realloc(station, (i+1) *sizeof(char));
     }while(tmp!='\0');
-    if(hashFind(atoi(station))== -1){
+    struct Station* node = hashTake(atoi(station));
+    if(node==NULL){
         ignoreAllTheLine();
         printf("non aggiunta\n"); 
         return;
     }
-    addCarSupport(atoi(station));
+    addCarSupport(node);
 
     //printf("%d\n", atoi(station));
 
@@ -157,11 +159,12 @@ void removeCar(){ //rottama-auto
         i++;
         station = (char*)realloc(station, (i+1) *sizeof(char));
     }while(input!='\n');
-    if(hashFind(atoi(station))== -1){ 
+    struct Station* node = hashTake(atoi(station));
+    if(node==NULL){ 
         ignoreAllTheLine();
         printf("non rottamata\n"); 
         return;
-        }
+    }
 
     char* car = (char*)malloc(sizeof(char));
     i=0;
@@ -174,8 +177,6 @@ void removeCar(){ //rottama-auto
     }while(input!='\n');
 
     //printf("%d %d\n", atoi(station), atoi(car));
-
-    struct Station* node = hashTake(atoi(station));
 
     unsigned int* range =  &node->biggestCar;
     if(isCar(node->biggestCar, atoi(car), node->aviableCar->avaiableCar)==0){ printf("non rottamata\n"); return;}
@@ -204,7 +205,7 @@ void path(){ //pianifica-percorso
     
     //printf("%d %d\n", start, end);
 
-    if(start<end){growFirstStep(start,end);}
+    if(start<end){printf("nessun percorso\n");}//growFirstStep(start,end);
     else{printf("nessun percorso\n");}
 
     free(num);
@@ -222,18 +223,18 @@ void parser(){
     while (1){
         input=fgetc(stdin);
         if(input==EOF)return;
-        printf("%c\n", input);
+        //printf("%c\n", input);
 
         if(input=='a'){
             ignoreChar(8);
             input=fgetc(stdin);
             if(input=='s'){         //aggiungi-stazione
-                printf("stazione\n");
+                //printf("stazione\n");
                 ignoreChar(8);
                 addStation();
             }
             else{                   //aggiungi-auto
-                printf("auto\n");
+                //printf("auto\n");
                 ignoreChar(4);
                 addCar();
             }
@@ -258,10 +259,12 @@ int hashFind(int pose){
     int hashIndex = pose % capacity;
     int relativeIndex = 0;
     while (hash[hashIndex+relativeIndex] != NULL) {
+        if(hashIndex+relativeIndex == capacity) {
+            relativeIndex = -hashIndex;
+        }
         if(hash[hashIndex+relativeIndex]->pose==pose)return hashIndex+relativeIndex;
-        if(relativeIndex == hashIndex)break;
-        if(relativeIndex == capacity) relativeIndex = -hashIndex;
         relativeIndex ++;
+        if(relativeIndex==0)break;      //the hash is full
     };
     
     return -1;
@@ -272,10 +275,10 @@ struct Station* hashTake(int pose){
     int hashIndex = pose % capacity;
     int relativeIndex = 0;
     while (hash[hashIndex+relativeIndex] != NULL) {
+        if(hashIndex+relativeIndex == capacity) relativeIndex = -hashIndex;
         if(hash[hashIndex+relativeIndex]->pose==pose)return hash[hashIndex+relativeIndex];
-        if(relativeIndex == hashIndex)break;
-        if(relativeIndex == capacity) relativeIndex = -hashIndex;
         relativeIndex ++;
+        if(relativeIndex==0)break;      //the hash is full
     };
     
     return NULL;
@@ -289,14 +292,23 @@ struct Station* hashInsert(unsigned int pose){
     node->rightReachMePose = 0;
     node->leftMin =-1;
     node->aviableCar= (struct Car*)malloc(sizeof(struct Car*));
+    node->aviableCar->next=NULL;
+    node->aviableCar->avaiableCar=0;
 
     int hashIndex = pose % capacity;
     int relativeIndex = 0;
 
-    while(hash[hashIndex+relativeIndex]!=NULL){         
-        if(relativeIndex == hashIndex)break;                //hash piena, andra` riallocata una piu grossa
-        if(relativeIndex == capacity) relativeIndex = -hashIndex;
+    while(hash[hashIndex+relativeIndex]!=NULL){
+        if(hashIndex+relativeIndex == capacity) relativeIndex = -hashIndex;   
+        if(hash[hashIndex+relativeIndex]->pose==pose){
+            printf("non aggiunta\n");
+            return NULL;
+        }
         relativeIndex++;
+        if(relativeIndex==0){
+            printf("piena °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°\n");
+            return NULL;
+        }
     }
 
     hash[hashIndex+relativeIndex] = node;
