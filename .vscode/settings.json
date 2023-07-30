@@ -9,6 +9,7 @@
         "system_error": "c",
         "thread": "c",
         "sstream": "c",
-        "array": "c"
+        "array": "c",
+        "random": "c"
     }
 }

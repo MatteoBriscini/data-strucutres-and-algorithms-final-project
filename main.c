@@ -1,24 +1,21 @@
 #include <stdio.h>
 #include <stdbool.h> 
 #include <stdlib.h>
+#include <stdint.h>
+
+#define carCapacity 513
+const int capacity = 17191;  //hash size > 57639 
+
 
 struct Station{
-    unsigned int pose;
-
-    int leftMin;
-    unsigned int leftReachMePose;
-    unsigned int rightMax;
-    unsigned int rightReachMePose;
-    
-    unsigned int biggestCar;
-    struct Car* aviableCar;
-};
-struct Car{
-    unsigned long avaiableCar;
-    struct Car* next;
+    int valid : 1;
+    unsigned int pose;    
+    int32_t biggestCar;
+    int32_t cars[carCapacity];
 };
 
-int capacity = 17191;  //hash size
+
+
 struct Station** hash;
 struct Station* garbage;
 
@@ -32,32 +29,20 @@ void addCar();
 void removeStation();
 void addStation();
 
-void updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, struct Car* bitMask);
-void updateCarBitMaskRemoved(unsigned int* oldRange, struct Car* bitMask);
-int carBitmaskOffset(unsigned int range, unsigned int carValue);
-int isCar(unsigned int range, unsigned int carValue, unsigned int bitMask);
-void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, unsigned int stationPose);
-void removeCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, unsigned int count);
-void printCars(struct Car* bitMask);
-
 struct Station* hashInsert(unsigned int pose);
 int hashFind(int pose);
 struct Station* hashTake(int pose);
 void hashRemove(int hashIndex);
-
-void reachMeInit(struct Station* station);
-void ReachMeUpdate(unsigned int oldRange, unsigned int newRange, unsigned int pose);
 void printStationHash();
 
-void growFirstStep(unsigned int start, unsigned int end);
-void gorwQuadraticaly(unsigned int  start, unsigned int end, unsigned int* result);
-
+void addCarAction(int32_t carValue, struct Station* Station);
+void removeCarAction(int32_t carValue, struct Station* Station);
 /* program */
 
 
 
 int main(){
-    hash = (struct Station**)malloc(sizeof(struct Station*)* capacity);
+    hash =  (struct Station**)calloc(capacity,sizeof(struct Station*));
 
     parser();
     
@@ -65,7 +50,9 @@ int main(){
     return 0;
 }
 
-/* parser */
+/*################################################################*/
+/*              input parser                                      */
+/*################################################################*/
 
 void addCarSupport(struct Station* station){
     char tmp;
@@ -81,12 +68,15 @@ void addCarSupport(struct Station* station){
             }
         car = (char*)realloc(car, (i+1) *sizeof(char));
     }while((tmp!='\n'));
-    //printf("%d\n",atoi(car));
 
-    if(atoi(car)!=0){
-        unsigned int* range =  &station->biggestCar;
-        addCarAction(range, atoi(car), station->aviableCar, station->pose);
-    }
+    if(atoi(car)>=2147483648 || atoi(car)<0) exit(9);
+
+    if(atoi(car)>station->biggestCar) station->biggestCar = atoi(car);
+    addCarAction(atoi(car), station);
+
+
+
+    //printCars(station->aviableCar);
     free(car);
 }
 
@@ -98,15 +88,24 @@ void addStation(){ //aggiungi-stazione
         tmp=fgetc(stdin);
         if(tmp== ' ' || tmp=='\n'){
             struct Station* node = hashInsert(atoi(input));
-            if(node==NULL)return;
-            reachMeInit(node);
-            if(tmp== ' ')addCarSupport(node);
+
+            if(node==NULL){
+                ignoreAllTheLine();
+                return;
+            }
+
+            if(tmp== ' '){
+                //node->aviableCar = (struct Car**)calloc(carCapacity,sizeof(struct Car*));
+                addCarSupport(node);
+            }
             break;
         }
         input[i] = tmp;
         i++;
         input = (char*)realloc(input, (i+1) *sizeof(char));
     }while(tmp!='\n');
+
+
 
     free(input);
     printf("aggiunta\n");
@@ -178,10 +177,9 @@ void removeCar(){ //rottama-auto
 
     //printf("%d %d\n", atoi(station), atoi(car));
 
-    unsigned int* range =  &node->biggestCar;
-    if(isCar(node->biggestCar, atoi(car), node->aviableCar->avaiableCar)==0){ printf("non rottamata\n"); return;}
-    removeCarAction(range, atoi(car), node->aviableCar, 0);
-    printf("rottamata\n");
+   // unsigned int* range =  &node->biggestCar;
+    removeCarAction(atoi(car), node);
+    //if(atoi(car)==node->biggestCar && node->biggestCar!=0) printf("update necessario");
 
     free(station);
     free(car);
@@ -223,18 +221,18 @@ void parser(){
     while (1){
         input=fgetc(stdin);
         if(input==EOF)return;
-        //printf("%c\n", input);
+        //printf("%c ", input);
 
         if(input=='a'){
             ignoreChar(8);
             input=fgetc(stdin);
             if(input=='s'){         //aggiungi-stazione
-                //printf("stazione\n");
+                //printf("stazione ");
                 ignoreChar(8);
                 addStation();
             }
             else{                   //aggiungi-auto
-                //printf("auto\n");
+                //printf("auto ");
                 ignoreChar(4);
                 addCar();
             }
@@ -252,19 +250,22 @@ void parser(){
     }
 }
 
-/* hash manage */
+/*################################################################*/
+/*              station hash manage                               */
+/*################################################################*/
 
 //find an element in hash return his index
 int hashFind(int pose){
     int hashIndex = pose % capacity;
     int relativeIndex = 0;
     while (hash[hashIndex+relativeIndex] != NULL) {
-        if(hashIndex+relativeIndex == capacity) {
-            relativeIndex = -hashIndex;
+        if(hash[hashIndex+relativeIndex]->pose==pose){
+            if(hash[hashIndex+relativeIndex]->valid==-1)return hashIndex+relativeIndex;
+            else return -1;
         }
-        if(hash[hashIndex+relativeIndex]->pose==pose)return hashIndex+relativeIndex;
         relativeIndex ++;
-        if(relativeIndex==0)break;      //the hash is full
+        if(hashIndex+relativeIndex == capacity) relativeIndex = -hashIndex;
+        if(relativeIndex==0)exit(32);     //the hash is full
     };
     
     return -1;
@@ -275,10 +276,13 @@ struct Station* hashTake(int pose){
     int hashIndex = pose % capacity;
     int relativeIndex = 0;
     while (hash[hashIndex+relativeIndex] != NULL) {
-        if(hashIndex+relativeIndex == capacity) relativeIndex = -hashIndex;
-        if(hash[hashIndex+relativeIndex]->pose==pose)return hash[hashIndex+relativeIndex];
+        if(hash[hashIndex+relativeIndex]->pose==pose){
+            if(hash[hashIndex+relativeIndex]->valid==-1)return hash[hashIndex+relativeIndex];
+            else return NULL;
+            }
         relativeIndex ++;
-        if(relativeIndex==0)break;      //the hash is full
+        if(hashIndex+relativeIndex == capacity) relativeIndex = -hashIndex;
+        if(relativeIndex==0)exit(31);     //the hash is full
     };
     
     return NULL;
@@ -286,244 +290,96 @@ struct Station* hashTake(int pose){
 
 //add an element to hash table
 struct Station* hashInsert(unsigned int pose){
-    struct Station* node = (struct Station*)malloc(sizeof(struct Station));
-    node->pose = pose;
-    node->leftReachMePose = 0;
-    node->rightReachMePose = 0;
-    node->leftMin =-1;
-    node->aviableCar= (struct Car*)malloc(sizeof(struct Car*));
-    node->aviableCar->next=NULL;
-    node->aviableCar->avaiableCar=0;
 
     int hashIndex = pose % capacity;
     int relativeIndex = 0;
 
     while(hash[hashIndex+relativeIndex]!=NULL){
-        if(hashIndex+relativeIndex == capacity) relativeIndex = -hashIndex;   
         if(hash[hashIndex+relativeIndex]->pose==pose){
             printf("non aggiunta\n");
+
+            //printStationHash();
+
             return NULL;
         }
+
+        if(hash[hashIndex+relativeIndex]->valid==0){
+            hash[hashIndex+relativeIndex]->valid =1;
+            hash[hashIndex+relativeIndex]->pose = pose;
+            hash[hashIndex+relativeIndex]->biggestCar = 0;
+            for(int i = 0; i<carCapacity;i++)hash[hashIndex+relativeIndex]->cars[i]=0;
+            //printStationHash();
+
+            return hash[hashIndex+relativeIndex];
+        }
+
         relativeIndex++;
-        if(relativeIndex==0){
-            printf("piena °°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°\n");
-            return NULL;
-        }
+        if(hashIndex+relativeIndex == capacity) relativeIndex = -hashIndex;   
+
+        if(relativeIndex==0)exit(30);
     }
 
+    struct Station* node = (struct Station*)malloc(sizeof(struct Station));
+    node->pose = pose;
+    node->biggestCar = 0;
+    node->valid = 1;
+
+    for(int i = 0; i<carCapacity;i++)node->cars[i]=0;
+
     hash[hashIndex+relativeIndex] = node;
+
+    //printStationHash();
+
     return node;
 }
 
 void hashRemove(int hashIndex){
-    free(hash[hashIndex]);
-    hash[hashIndex]=NULL;
-}
+    hash[hashIndex]->valid = 0;
 
-/* car manage */
-
-//add the car to the bitMask
-void addCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, unsigned int stationPose){
-    if(car>*range){
-        updateCarBitMaskPassed(*range, car, bitMask);
-        ReachMeUpdate(*range, car, stationPose);
-        *range = car;
-    }
-    if(bitMask->next==NULL && isCar(*range,car,bitMask->avaiableCar)==1){
-        bitMask->next = (struct Car*)malloc(sizeof(struct Car*));
-        bitMask->next->avaiableCar =0;
-        bitMask->next->next=NULL;
-        return addCarAction(range,car,bitMask->next, stationPose);
-    }
-    else if(bitMask->next!=NULL && isCar(*range,car,bitMask->avaiableCar)==1){
-        return addCarAction(range,car,bitMask->next, stationPose);
-    }
-    bitMask->avaiableCar = (unsigned int) bitMask->avaiableCar + carBitmaskOffset(*range, car);
-    //printf("%d %lu \n", stationPose, bitMask->avaiableCar);
-}
-
-//remove the car from the bitmask (didn't controll if the car is present)
-void removeCarAction(unsigned int* range, unsigned int car, struct Car* bitMask, unsigned int count){
-    if(bitMask->next!=NULL && isCar(*range,car,bitMask->next->avaiableCar)){
-        removeCarAction(range, car, bitMask->next, count+1);
-        if(bitMask->next->avaiableCar==0){
-            free(bitMask->next);
-            bitMask->next=NULL;
-        }
-        return;
-    }
-    bitMask->avaiableCar = (unsigned int) bitMask->avaiableCar - carBitmaskOffset(*range, car);
-    if(car==*range){
-        if(count==0 && bitMask->avaiableCar == 0){
-            *range=0;
-            return;
-        }
-        updateCarBitMaskRemoved(range, bitMask);
-    }
-}
-
-void printCars(struct Car* bitMask){
-    printf ("| %lu |", bitMask->avaiableCar);
-    if(bitMask->next!=NULL) return printCars(bitMask->next);
-    printf("\n");
-}
-
-//called when new car added and is bigger than range
-void updateCarBitMaskPassed(unsigned int oldRange,unsigned int newRange, struct Car* bitMask){
-    bitMask->avaiableCar = (bitMask->avaiableCar)<<(newRange-oldRange);
-    if(bitMask->next!=NULL)return updateCarBitMaskPassed(oldRange,newRange,bitMask->next);
-}
-void updateCarRemovedSupport(unsigned int oldeRange, unsigned int newRange, struct Car* bitMask){
-    bitMask->avaiableCar = (bitMask->avaiableCar)>>(oldeRange-newRange);
-    if(bitMask->next!=NULL)return updateCarRemovedSupport(oldeRange, newRange, bitMask->next);
-}
-//call when biggest car is been removed
-void updateCarBitMaskRemoved(unsigned int* oldRange, struct Car* bitMask){
-   unsigned int tmp = *oldRange;
-   unsigned int newRange = tmp-1;
-
-   while (newRange>0){ 
-        if(isCar(tmp, newRange, bitMask->avaiableCar)==1){
-            *oldRange = newRange;
-            break;
-        }
-        else newRange= newRange-1;
-    }
-    return updateCarRemovedSupport(tmp, *oldRange, bitMask);
-}
-//offeset to update bitMask when car added or remove [if add bitMask = bitMask + offset | if remove bitMask = bitMask - offset ]
-int carBitmaskOffset(unsigned int range, unsigned int carValue){
-    return 1<<(range-carValue);
-}
-//to verify if there is the car in the aviableCard bitMask 
-int isCar(unsigned int range, unsigned int carValue, unsigned int bitMask){
-    if(((1<<(range-carValue))&bitMask)!=0) return 1;
-    return 0;
-}
-
-/* reachable pose manage */
-void reachMeInit(struct Station* station){ //when a new station is added its bitmusk must be created
-    for(int i= 0; i < capacity; i++){
-        if(hash[i] != NULL){
-                if(hash[i]->pose < station->pose){ //left update
-                    if(hash[i]->biggestCar>= station->pose-hash[i]->pose){
-                        station->leftReachMePose = (unsigned int) station->leftReachMePose + (1<<(station->pose-hash[i]->pose-1));
-                        if(station->leftMin>hash[i]->pose){
-                            station->leftMin = hash[i]->pose;
-                        }
-                    }
-                }
-                if(hash[i]->pose > station->pose){ //right update
-                    if(hash[i]->biggestCar>= hash[i]->pose-station->pose){
-                        station->rightReachMePose = (unsigned int) station->rightReachMePose + (1 << (hash[i]->pose-station->pose-1));
-                        if(station->rightMax<hash[i]->pose){
-                            station->rightMax = hash[i]->pose;
-                        }
-                    }
-                }
-        }
-    }
-}
-
-void ReachMeUpdate(unsigned int oldRange, unsigned int newRange, unsigned int pose){//update the bitmusk off al the station
-    if(oldRange-newRange>capacity){
-        for(int i=0;i<capacity;i++){
-            if(hash[i]!=NULL){
-                if(hash[i]->pose>=(pose-newRange)&&hash[i]->pose<(pose-oldRange)){//left update
-                    hash[i]->rightReachMePose = (unsigned int) hash[i]->rightReachMePose + (1<< (pose-i-1));
-                    if(hash[i]->rightMax<pose){
-                        hash[i]->rightMax = pose;
-                    }
-                }
-                if(hash[i]->pose<=(pose+newRange)&&hash[i]->pose>(pose+oldRange)){//right update
-                    hash[i]->leftReachMePose = (unsigned int) hash[i]->leftReachMePose + (1<< (i-pose-1));
-                    if(hash[i]->leftMin>pose){
-                        hash[i]->leftMin = pose;
-                    }
-                }
-            }
-        }
-        return;
-    }
-    int tmp=pose+oldRange-newRange;
-    if(tmp<0){tmp=0;}
-    for(int i = tmp; i<pose; i++){//left update
-        if(hashFind(i)!=-1){
-            struct Station* node = hashTake(i);            
-            node->rightReachMePose = (unsigned int) node->rightReachMePose + (1<< (pose-i-1));
-            if(node->rightMax<pose){
-                node->rightMax = pose;
-            }
-            //printf("updated left: %d, %d, %d, %d\n", pose, i, node->rightReachMePose, node->rightMax);
-        }
-    }
-    for(int i = pose+newRange; i>pose+oldRange; i--){//right update
-        if(hashFind(i)!=-1){
-            struct Station* node = hashTake(i);
-            node->leftReachMePose = (unsigned int) node->leftReachMePose + (1<< (i-pose-1));
-            if(node->leftMin>pose){
-                node->leftMin = pose;
-            }
-            //printf("updated right: %d, %d, %d, %d\n", pose, i, node->leftReachMePose, node->leftMin);
-        }
-    }
+    //printStationHash();
 }
 
 void printStationHash(){
     for(int i=0; i< capacity; i++){
         if(hash[i]!=NULL){
-            printf("pose: %d rb:%d rMax:%d lb:%d lMin:%d\n", hash[i]->pose, 
-                hash[i]->rightReachMePose, hash[i]->rightMax ,
-                hash[i]-> leftReachMePose, hash[i]->leftMin);
+            printf("pose: %d car:%d valid:%d\n", hash[i]->pose, hash[i]->biggestCar, hash[i]->valid);
         }
     }
 }
 
-void correctLeftMin(struct Station* station){
-    station->leftReachMePose=station->leftReachMePose-(1<<((station->pose-1)-(station->leftMin)));
-    int i;
-    for(i=(station->pose-2)-(station->leftMin); i>=0; i--){
-        if (((1<<i)&station->leftReachMePose)!=0){
-            if(hashFind(station->pose-1-i)!=-1)break;
-        }
+/*################################################################*/
+/*              car management                                    */
+/*################################################################*/
+
+void carPrinter(struct Station* station){
+    printf("%d\n", station->pose);
+    for(int i = carCapacity-1; i>=0;i--){
+        printf("%d | ", station->cars[i]);
     }
-    if(station->leftReachMePose==0){station->leftMin=-1;}
-    else{station->leftMin=station->pose-1-i;}
+    printf("\n\n");
 }
 
-/* plan route */
-
-
-
-void growFirstStep(unsigned int start, unsigned int end){
-    if(hashTake(end)->leftMin==start){//if you can reach directly
-        printf("%d %d\n", start, end);
-        return;
-    }
-    unsigned int result=0;
-    int i=end;
-    while (true){
-        if(hashTake(i)->leftMin==-1){//if you can't move
-            printf("nessun percorso\n");
+void addCarAction(int32_t carValue, struct Station* station) {
+    if(carValue==0)carValue=-1;
+    for(int i = 0; i<carCapacity; i++){
+        if(station->cars[i]==0){
+            station->cars[i]=carValue;
             return;
         }
-        if(hashFind(hashTake(i)->leftMin)==-1){//if the selected station was removed
-            correctLeftMin(hashTake(i));
-            if(hashTake(i)->leftMin==-1){//if you can't move
-                printf("nessun percorso\n");
-                return;
-            }
-        }
-        i=hashTake(i)->leftMin;
-        result=result+(1<<(end-i-1));
-        if(hashTake(i)->leftMin<=start){
-            break;
-        }
     }
-    //printf("res:%d act:%d\n", result, i);
-    if(i!=start)gorwQuadraticaly(start, i, &result);
+    exit(20);
 }
 
-void gorwQuadraticaly(unsigned int  start, unsigned int end, unsigned int* result){
-    printf("nessun percorso\n");
+void removeCarAction(int32_t carValue, struct Station* station){
+    if(carValue==0)carValue=-1;
+    for(int i = carCapacity-1; i>=0;i--){
+        if(station->cars[i]==carValue){
+            station->cars[i]=0;
+            printf("rottamata\n");
+            return;
+        }
+    }
+    printf("non rottamata\n");
+    return;
 }
+
