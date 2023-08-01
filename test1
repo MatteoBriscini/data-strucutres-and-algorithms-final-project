@@ -1,15 +1,7 @@
-aggiungi-stazione 12
-aggiungi-stazione 0
-aggiungi-auto 0 13
-aggiungi-stazione 13 9
-aggiungi-stazione 14 9
-aggiungi-stazione 23 9
-aggiungi-stazione 2 10
-aggiungi-stazione 11 10
-aggiungi-stazione 255 4
-pianifica-percorso 0 12
-aggiungi-stazione 21 4
-demolisci-stazione 14
-pianifica-percorso 13 23
-pianifica-percorso 13 255
-pianifica-percorso 23 13
+aggiungi-stazione 58888 1 10
+aggiungi-stazione 3750 1 470
+aggiungi-stazione 4217 1 54671
+aggiungi-stazione 3949 1 54939
+aggiungi-stazione 58898 1 150
+aggiungi-stazione 58988
+pianifica-percorso 3750 58988

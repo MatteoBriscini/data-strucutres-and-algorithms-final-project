@@ -8,10 +8,16 @@ const int capacity = 18313;  //hash size: > 57639
 
 
 struct Station{
-    unsigned int pose;    
+    unsigned int pose;
+    int prev;   
     int32_t biggestCar;
     int32_t cars[carCapacity];
     struct Station* next;
+};
+
+struct ListEl{
+    int pose;
+    struct ListEl* next;
 };
 
 
@@ -21,6 +27,7 @@ struct Station* garbage;
 
 /* prototypes */
 void ignoreAllTheLine();
+int ignoreUntilSpace();
 void parser();
 char parserSupport(int index, char string[]);
 void path();
@@ -37,6 +44,14 @@ void printStationHash();
 void addCarAction(int32_t carValue, struct Station* Station);
 void removeCarAction(int32_t carValue, struct Station* Station);
 void removeBiggestCar(int32_t carValue, struct Station* station);
+
+void pathPrinter(int start, int end);
+void listInsert(struct ListEl *list, int value);
+void printList(struct ListEl *list);
+void growingPath(int start, int end);
+int growingDijkstra(struct ListEl *sortedList, int end);
+void descendingPath(int start, int end);
+
 /* program */
 
 
@@ -45,8 +60,7 @@ int main(){
     hash =  (struct Station**)calloc(capacity,sizeof(struct Station*));
 
     parser();
-    
-    //printStationHash();
+
     return 0;
 }
 
@@ -69,7 +83,7 @@ void addCarSupport(struct Station* station){
         car = (char*)realloc(car, (i+1) *sizeof(char));
     }while((tmp!='\n'));
 
-    //if(atoi(car)>=2147483648 || atoi(car)<0) exit(9);
+    if(atoi(car)>=2147483647 || atoi(car)<0) exit(9);
 
     if(atoi(car)>station->biggestCar) station->biggestCar = atoi(car);
     addCarAction(atoi(car), station);
@@ -94,8 +108,8 @@ void addStation(){ //aggiungi-stazione
                 return;
             }
 
-            if(tmp== ' '){
-                addCarSupport(node);
+            if(tmp== ' ' && ignoreUntilSpace()!=-1){
+                addCarSupport(node);         
             }
             break;
         }
@@ -199,14 +213,27 @@ void path(){ //pianifica-percorso
     
     //printf("%d %d\n", start, end);
 
-    if(start<end){printf("nessun percorso\n");}//growFirstStep(start,end);
-    else{printf("nessun percorso\n");}
+
+    if(start<end){growingPath(start,end);}//growFirstStep(start,end);
+    else if (start == end)
+    {
+        printf("%d\n", start);
+    }
+    else{printf("scende\n");}  //descendingPath(start,end);
 
     free(num);
 }
 
 void ignoreChar(int number){
     for(int i=0; i<number;i++)getc(stdin);
+}
+int ignoreUntilSpace(){
+    char c = fgetc(stdin);
+    while (c!=' '){
+        if(c=='\n')return-1;
+        c = fgetc(stdin);
+    }
+    return 0;
 }
 void ignoreAllTheLine(){
     while (fgetc(stdin)!='\n'){}
@@ -279,6 +306,7 @@ struct Station* hashInsert(unsigned int pose){
         hash[hashIndex]->pose = pose;
         hash[hashIndex]->biggestCar = 0;
         hash[hashIndex]->next = NULL;
+        hash[hashIndex]->prev = 0;
         for(int i = 0; i<carCapacity;i++)hash[hashIndex]->cars[i]=0;
         return hash[hashIndex];
     }
@@ -306,6 +334,7 @@ struct Station* hashInsert(unsigned int pose){
     hashEl->next->pose = pose;
     hashEl->next->biggestCar = 0;
     hashEl->next->next = NULL;
+    hashEl->next->prev =0;
     for(int i = 0; i<carCapacity;i++)hashEl->next->cars[i]=0;
 
     return hashEl->next;
@@ -353,7 +382,7 @@ void printStationHash(){
         struct Station* hashEl = hash[i];
         if(hashEl!=NULL){
             while (hashEl!=NULL){
-                printf("pose: %d car:%d | ", hashEl->pose, hashEl->biggestCar);
+                printf("pose: %d car:%d prev: %d | ", hashEl->pose, hashEl->biggestCar, hashEl->prev);
                 hashEl=hashEl->next;
             }
             printf("\n");
@@ -429,3 +458,160 @@ void removeBiggestCar(int32_t carValue, struct Station* station){
 /*################################################################*/
 /*              path fider                                        */
 /*################################################################*/
+
+void pathPrinter(int start, int end){
+    int prev = hashTake(end)->prev;
+    if(prev!= start) pathPrinter(start, prev);
+    printf("%d ",prev);
+}
+
+void printList(struct ListEl *list){
+    while(list!=NULL){
+        printf("%d", list->pose);
+        printf(" : %d", hashTake(list->pose)->biggestCar);
+        printf(" | ");
+        list=list->next;
+    }
+    printf("\n");
+
+
+}
+
+void listInsert(struct ListEl *list, int value){
+
+    struct ListEl *el = (struct ListEl*)malloc(sizeof(struct ListEl));
+
+    while(list->next!=NULL){
+        if(list->next->pose>value){
+            el = list->next;
+            list->next = (struct ListEl*)malloc(sizeof(struct ListEl));
+            list->next->pose = value;
+            list->next->next=el;
+            return;
+        }
+        list=list->next;
+    }
+    list->next= (struct ListEl*)malloc(sizeof(struct ListEl));
+    list->next->pose = value;
+    list->next->next=NULL;
+
+}
+
+struct ListEl* listCostructor(int start, int end){
+
+    struct ListEl *head = (struct ListEl*)malloc(sizeof(struct ListEl));
+    head->pose = start;
+    head->next=NULL;
+
+
+    for(int i=0; i<capacity; i++){
+        struct Station* hashEl = hash[i];
+        while (hashEl!=NULL){        
+            if(hashEl->pose>start && hashEl->pose<=end){
+                listInsert(head, hashEl->pose);          
+            }
+        hashEl=hashEl->next;
+        }
+    }
+
+    return head;
+}
+
+/*          growing path            */
+
+void growingPath(int start, int end){
+    struct ListEl* head = listCostructor(start, end);
+
+    if(head==NULL)printf("test");
+
+    /*
+    printList(head);
+    printf("\n");
+    printStationHash();
+    */
+
+    if(growingDijkstra(head, end)==1){
+        pathPrinter(start,end);
+        printf("%d\n", end);
+    }
+    //exit(100);
+}
+
+int growingDijkstra(struct ListEl *sortedList, int end){
+    struct ListEl *first = (struct ListEl*)malloc(sizeof(struct ListEl));
+    first->pose = sortedList->pose;
+    first->next = NULL;
+    struct ListEl *last = first;
+    struct ListEl *tmp = sortedList;
+    int maxPose=0;
+
+    sortedList = sortedList->next;      //free the el in the order list
+    free(tmp);
+    tmp=sortedList;
+
+    int range = (hashTake(first->pose))->biggestCar;
+
+    //struct ListEL *tmp = sortedList;
+
+
+    while (sortedList!=NULL && sortedList->pose<=end){
+        if(first->pose+range>maxPose && first->pose+range>=sortedList->pose){
+            while(1){
+                last->next = (struct ListEl*)malloc(sizeof(struct ListEl)); //add the el as last in the list
+                last->next->pose=sortedList->pose;
+                if(sortedList->pose>maxPose)maxPose=sortedList->pose;  
+
+                hashTake(last->next->pose)->prev=first->pose; //stave the previous step in the hash
+
+                sortedList = sortedList->next;      //free the el in the order list
+                free(tmp);
+                tmp=sortedList;
+
+                if(sortedList==NULL || (first->pose)+range<sortedList->pose){
+                    break;
+                    }
+
+                last=last->next;        //skip to the next el
+            }
+
+            last=last->next;        //skip to the next el
+
+            /*
+            printf("open list:  ");
+            printList(first);
+            printf("order list: ");
+            printList(sortedList);
+            printf("%d\n", last->pose);
+            printf("\n");
+            */
+
+        }
+
+        tmp=first;          //free first el in the open list
+        first=first->next;
+        free(tmp);
+        tmp=sortedList;
+
+        if(first==NULL){
+            printf("nessun percorso\n");
+            return 0;
+        }
+
+        range = (hashTake(first->pose))->biggestCar;
+    }
+
+    //printf("\n");
+    //printStationHash();
+    return 1;
+}
+
+/*          descendin path          */
+
+void descendingPath(int start, int end){
+    struct ListEl* head = listCostructor(end, start);
+
+    if(head==NULL)printf("test");
+
+    printList(head);
+}
+

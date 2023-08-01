@@ -1,0 +1,3 @@
+aggiungi-stazione 91 9 5 4 5 5 4 6 5 4 5
+aggiungi-stazione 24 6 5 4 5 4 4 5
+pianifica-percorso 24 91
