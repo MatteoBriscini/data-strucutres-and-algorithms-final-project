@@ -51,6 +51,7 @@ void printList(struct ListEl *list);
 void growingPath(int start, int end);
 int growingDijkstra(struct ListEl *sortedList, int end);
 void descendingPath(int start, int end);
+int descendingDijkstra(struct ListEl *sortedList, int end);
 
 /* program */
 
@@ -214,12 +215,9 @@ void path(){ //pianifica-percorso
     //printf("%d %d\n", start, end);
 
 
-    if(start<end){growingPath(start,end);}//growFirstStep(start,end);
-    else if (start == end)
-    {
-        printf("%d\n", start);
-    }
-    else{printf("scende\n");}  //descendingPath(start,end);
+    if(start<end) growingPath(start,end);
+    else if (start == end) printf("%d\n", start);
+    else descendingPath(start, end);  
 
     free(num);
 }
@@ -340,6 +338,7 @@ struct Station* hashInsert(unsigned int pose){
     return hashEl->next;
 }
 
+//remove an element from the hash table
 void hashRemove(int pose){
     int hashIndex = pose % capacity;
     if(hash[hashIndex]==NULL){
@@ -459,6 +458,8 @@ void removeBiggestCar(int32_t carValue, struct Station* station){
 /*              path fider                                        */
 /*################################################################*/
 
+/*          growing path            */
+
 void pathPrinter(int start, int end){
     int prev = hashTake(end)->prev;
     if(prev!= start) pathPrinter(start, prev);
@@ -468,7 +469,7 @@ void pathPrinter(int start, int end){
 void printList(struct ListEl *list){
     while(list!=NULL){
         printf("%d", list->pose);
-        printf(" : %d", hashTake(list->pose)->biggestCar);
+        //printf(" : %d", hashTake(list->pose)->biggestCar);
         printf(" | ");
         list=list->next;
     }
@@ -503,7 +504,6 @@ struct ListEl* listCostructor(int start, int end){
     head->pose = start;
     head->next=NULL;
 
-
     for(int i=0; i<capacity; i++){
         struct Station* hashEl = hash[i];
         while (hashEl!=NULL){        
@@ -517,12 +517,8 @@ struct ListEl* listCostructor(int start, int end){
     return head;
 }
 
-/*          growing path            */
-
 void growingPath(int start, int end){
     struct ListEl* head = listCostructor(start, end);
-
-    if(head==NULL)printf("test");
 
     /*
     printList(head);
@@ -538,7 +534,7 @@ void growingPath(int start, int end){
 }
 
 int growingDijkstra(struct ListEl *sortedList, int end){
-    struct ListEl *first = (struct ListEl*)malloc(sizeof(struct ListEl));
+    struct ListEl *first = (struct ListEl*)malloc(sizeof(struct ListEl));   //add the first el in the order list to the open list
     first->pose = sortedList->pose;
     first->next = NULL;
     struct ListEl *last = first;
@@ -553,7 +549,6 @@ int growingDijkstra(struct ListEl *sortedList, int end){
 
     //struct ListEL *tmp = sortedList;
 
-
     while (sortedList!=NULL && sortedList->pose<=end){
         if(first->pose+range>maxPose && first->pose+range>=sortedList->pose){
             while(1){
@@ -561,7 +556,7 @@ int growingDijkstra(struct ListEl *sortedList, int end){
                 last->next->pose=sortedList->pose;
                 if(sortedList->pose>maxPose)maxPose=sortedList->pose;  
 
-                hashTake(last->next->pose)->prev=first->pose; //stave the previous step in the hash
+                hashTake(last->next->pose)->prev=first->pose; //save the previous step in the hash
 
                 sortedList = sortedList->next;      //free the el in the order list
                 free(tmp);
@@ -600,18 +595,128 @@ int growingDijkstra(struct ListEl *sortedList, int end){
         range = (hashTake(first->pose))->biggestCar;
     }
 
-    //printf("\n");
-    //printStationHash();
     return 1;
 }
 
 /*          descendin path          */
 
-void descendingPath(int start, int end){
-    struct ListEl* head = listCostructor(end, start);
+void descendingListInsert(struct ListEl *list, int value){
 
-    if(head==NULL)printf("test");
+    struct ListEl *el = (struct ListEl*)malloc(sizeof(struct ListEl));
 
-    printList(head);
+    while(list->next!=NULL){
+        if(list->next->pose<value){
+            el = list->next;
+            list->next = (struct ListEl*)malloc(sizeof(struct ListEl));
+            list->next->pose = value;
+            list->next->next=el;
+            return;
+        }
+        list=list->next;
+    }
+    list->next= (struct ListEl*)malloc(sizeof(struct ListEl));
+    list->next->pose = value;
+    list->next->next=NULL;
 }
 
+struct ListEl* descendingListCostructor(int start, int end){
+    struct ListEl *head = (struct ListEl*)malloc(sizeof(struct ListEl));
+    head->pose = start;
+    head->next=NULL;   
+
+    for(int i=0; i<capacity; i++){
+        struct Station* hashEl = hash[i];
+        while (hashEl!=NULL){  
+            if(hashEl->pose<start && hashEl->pose>=end){
+                descendingListInsert(head, hashEl->pose);          
+            }
+        hashEl=hashEl->next;
+        }
+    }
+
+    return head;
+}
+
+void descendingPath(int start, int end){
+
+    struct ListEl* head = descendingListCostructor(start, end);
+
+    if(descendingDijkstra(head, end)==1){
+        pathPrinter(start,end);
+        printf("%d\n", end);
+    }
+
+    printStationHash();
+}
+
+int descendingDijkstra(struct ListEl *sortedList, int end){
+    struct ListEl *first = (struct ListEl*)malloc(sizeof(struct ListEl));   //add the first el in the order list to the open list
+    first->pose = sortedList->pose;
+    first->next = NULL;
+    struct ListEl *last = first;
+    struct ListEl *tmp = sortedList;
+    int minPose=first->pose;
+
+    sortedList = sortedList->next;      //free the el in the order list
+    free(tmp);
+
+    int range = (hashTake(first->pose))->biggestCar;
+
+    while (sortedList!=NULL && sortedList->pose>=end){
+        if(first->pose-range<=minPose && first->pose-range<=sortedList->pose){
+            while(1){
+
+                if(last->next==NULL){
+                    last->next = (struct ListEl*)malloc(sizeof(struct ListEl));
+                    last->next->pose=sortedList->pose;
+                    last->next->next=NULL;
+                }else{
+                    tmp = last->next;
+                    last->next = (struct ListEl*)malloc(sizeof(struct ListEl));
+                    last->next->pose=sortedList->pose;
+                    last->next->next=tmp;
+                }
+
+                hashTake(last->next->pose)->prev=first->pose; //stave the previous step in the hash                
+
+                if(sortedList->pose<minPose)minPose=sortedList->pose;  
+
+                tmp=sortedList;
+                sortedList = sortedList->next;      //free the el in the order list
+                free(tmp);
+                tmp=sortedList;
+
+                if(sortedList==NULL || (first->pose)-range>sortedList->pose){
+                    break;
+                }  
+            }
+
+            while (last->next!=NULL)
+            {
+                last=last->next;
+            }
+        }
+
+        printf("order list: ");
+        printList(sortedList);
+        printf("open list: ");
+        printList(first);
+        printf("%d\n",last->pose);
+        printf("\n");
+
+        tmp=first;          //free first el in the open list
+        first=first->next;
+        free(tmp);
+
+        if(first==NULL){
+            printf("nessun percorso\n");
+            return 0;
+        }
+
+        range = (hashTake(first->pose))->biggestCar;
+    }
+
+    //qui va inserita fase 2
+
+    return 1;
+}

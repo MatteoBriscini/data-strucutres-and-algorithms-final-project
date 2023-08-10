@@ -1,7 +1,9 @@
-aggiungi-stazione 58888 1 10
-aggiungi-stazione 3750 1 470
-aggiungi-stazione 4217 1 54671
-aggiungi-stazione 3949 1 54939
-aggiungi-stazione 58898 1 150
-aggiungi-stazione 58988
-pianifica-percorso 3750 58988
+aggiungi-stazione 45 1 16
+aggiungi-stazione 42 1 24
+aggiungi-stazione 25
+aggiungi-stazione 37 1 15
+aggiungi-stazione 29 1 7
+aggiungi-stazione 22 1 50
+aggiungi-stazione 19 1 6
+aggiungi-stazione 17
+pianifica-percorso 45 17
