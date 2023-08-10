@@ -52,6 +52,7 @@ void growingPath(int start, int end);
 int growingDijkstra(struct ListEl *sortedList, int end);
 void descendingPath(int start, int end);
 int descendingDijkstra(struct ListEl *sortedList, int end);
+void descendingDijkstraP2(struct ListEl *openList, int end);
 
 /* program */
 
@@ -469,7 +470,7 @@ void pathPrinter(int start, int end){
 void printList(struct ListEl *list){
     while(list!=NULL){
         printf("%d", list->pose);
-        //printf(" : %d", hashTake(list->pose)->biggestCar);
+        printf(" : *%d*", hashTake(list->pose)->biggestCar);
         printf(" | ");
         list=list->next;
     }
@@ -646,7 +647,7 @@ void descendingPath(int start, int end){
         printf("%d\n", end);
     }
 
-    printStationHash();
+    //printStationHash();
 }
 
 int descendingDijkstra(struct ListEl *sortedList, int end){
@@ -679,7 +680,9 @@ int descendingDijkstra(struct ListEl *sortedList, int end){
 
                 hashTake(last->next->pose)->prev=first->pose; //stave the previous step in the hash                
 
-                if(sortedList->pose<minPose)minPose=sortedList->pose;  
+                if(sortedList->pose<minPose){
+                    minPose=sortedList->pose; 
+                } 
 
                 tmp=sortedList;
                 sortedList = sortedList->next;      //free the el in the order list
@@ -690,19 +693,22 @@ int descendingDijkstra(struct ListEl *sortedList, int end){
                     break;
                 }  
             }
-
-            while (last->next!=NULL)
-            {
-                last=last->next;
-            }
         }
 
+        if(first->pose==last->pose){
+                while (last->next!=NULL){
+                    last=last->next;
+                }
+        }
+
+        /*
         printf("order list: ");
         printList(sortedList);
         printf("open list: ");
         printList(first);
-        printf("%d\n",last->pose);
-        printf("\n");
+        printf("%d\n", minPose);
+        printf("first: %d last: %d\n", first->pose, last->pose);
+        printf("\n");*/
 
         tmp=first;          //free first el in the open list
         first=first->next;
@@ -716,7 +722,27 @@ int descendingDijkstra(struct ListEl *sortedList, int end){
         range = (hashTake(first->pose))->biggestCar;
     }
 
-    //qui va inserita fase 2
+    //if(first!=NULL)descendingDijkstraP2(first, end);
 
     return 1;
+}
+
+void descendingDijkstraP2(struct ListEl *openList, int end){
+    struct ListEl *tmp = openList;
+    //struct Station *endStation = hashTake(end);
+    //struct Station *selectedStation = hashTake(openList->pose);
+
+    printf("open list: ");
+    printList(openList);
+
+    while (openList->pose>end && openList!=NULL)
+    {
+        //if(openList->pose-selectedStation->biggestCar<=end && endStation->prev>openList->pose)endStation->prev=openList->pose;
+
+        openList=openList->next;
+        free(tmp);
+        tmp=openList;
+    }
+    
+
 }
