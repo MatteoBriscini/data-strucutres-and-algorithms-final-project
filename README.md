@@ -7,7 +7,7 @@ A trip is identified by a sequence of stations where a driver stop, assuming tha
 Given a couple of stations, the goal of the project is to find the path, from the first station to the second, with fewer stops possible. If exist more path with the same number of stops, the algorithms has to choose, from right to left, the path with smaller station value. <br>
 *example: 10-50-<span style="color: red">60</span>-90 is better than 10-30-<span style="color: red">85</span>-90, because 60<85.*
 
->**Note**: you can find the official requirements: here.
+>**Note**: you can find the official requirements: [here](https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/api_technicalSpecification.pdf).
 ### Command and expected response
 >**Note**: this project is a part of an italian course, so commands are written in italian.
 * ***Add-station distance cars-number car1-autonomy.... carN-autonomy:*** add a station on the specified position. <br>
@@ -66,6 +66,7 @@ Following you can find a short sequence of input commands and the correct output
     rottama-auto 9999 5             //-> non rottamata
     pianifica-percorso 20 50        //-> 20 30 50
 
+![alt text](https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/example.png)
 </details><br>
 
 ## Design and implementation choices
@@ -132,8 +133,8 @@ When the list is completed (the algorithm has explored the entire hash table), t
     ``` 
 ## Project evaluation
 
-For the project evaluation has been used an online tester based on unknown test case, any way the professor supported the project with 111 testing files (reported here). <br>
-We suppose the online tester is similar in to complexity of the open_108.txt test case.
+For the project evaluation has been used an online tester based on unknown test case, any way the professor supported the project with 111 testing files (reported [here](https://github.com/MatteoBriscini/API_project/tree/master/test)). <br>
+We suppose the online tester is similar in to complexity of the [open_108.txt](https://github.com/MatteoBriscini/API_project/blob/master/test/open_108.txt) test case.
 
 | Evaluation | maximums used memory | maximums used time |
 |------------|----------------------|--------------------|
