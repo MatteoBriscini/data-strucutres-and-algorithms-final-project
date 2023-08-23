@@ -539,7 +539,7 @@ void descendingQuickSort(struct ListEl *head, struct ListEl *last){
 
 
 /*################################################################*/
-/*              path fider                                        */
+/*              path finder                                       */
 /*################################################################*/
 
 //entry at the top of the list, used to insert element in the ordered list
@@ -657,7 +657,7 @@ int growingDijkstra(struct ListEl *sortedList, int end){
     return 1;
 }
 
-/*          descendin path          */
+/*          descending path          */
 
 
 struct ListEl* descendingListConstructor(int start, int end){
