@@ -113,7 +113,7 @@ When the list is completed (the algorithm has explored the entire hash table), t
  The implemented algorithm is a bit different if the path is from left to right (growingPath), or right to left (descendingPath) in terms of: order of the ordered list, insertion order in the open list. <br>
   * ***growingPath:*** growing ordered list, insertion on the end of the list.
   
-  <img src="https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/growingPath.gif" width="900"/>
+  <img src="https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/growingPath.gif" width="700"/>
   
   * ***descendingPath:*** decreasing ordered list, custom list insertion.
     <details>
