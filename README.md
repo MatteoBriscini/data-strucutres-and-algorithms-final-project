@@ -116,6 +116,9 @@ When the list is completed (the algorithm has explored the entire hash table), t
   <img src="https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/growingPath.gif" width="700"/>
   
   * ***descendingPath:*** decreasing ordered list, custom list insertion.
+
+  <img src="https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/descendingPath.gif" width="700"/>
+
     <details>
         <summary>Custom list insertion:</summary>
     
