@@ -5,7 +5,7 @@ Considering a highway as a sequence of service stations, each station is  identi
 Each station has some vehicles (caraterized by the autonomy of battery), with limitation of 512 cars for a single station. <br> 
 A trip is identified by a sequence of stations where a driver stop, assuming that the driver changes the car each time he stops in a station, and he can't  change direction on the highway. <br>
 Given a couple of stations, the goal of the project is to find the path, from the first station to the second, with fewer stops possible. If exist more path with the same number of stops, the algorithms has to choose, from right to left, the path with smaller station value. <br>
-*example: 10-50-<span style="color: red">60</span>-90 is better than 10-30-<span style="color: red">85</span>-90, because 60<85.*
+*example: 10-50-***60***-90 is better than 10-30-***85***-90, because 60<85.*
 
 >**Note**: you can find the official requirements: [here](https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/api_technicalSpecification.pdf).
 ### Command and expected response
