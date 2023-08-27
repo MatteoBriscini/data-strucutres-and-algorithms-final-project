@@ -14,21 +14,21 @@ Given a couple of stations, the goal of the project is to find the path, from th
     Expected response: *"aggiunta"* if the station is added or *"non aggiunta"* if the station is already present. <br>
     Example: (add a station on the position 10 with 3 cars)
     ```
-      aggiungi-stazione 10 3 100 200 300
+    aggiungi-stazione 10 3 100 200 300
     ```
   <br>
 * ***Remove-station distance:*** remove the station at the specified distance and all cars in that station. <br>
     Expected response: *"demolita"* if the station has been removed or *"non demolita"* if the station isn't present. <br>
     Example:
     ```
-      demolisci-stazione 10
+    demolisci-stazione 10
     ```
   <br>
 * ***Add-car station-distance car-autonomy:*** add a car with specified autonomy to the specified station. <br>
     Expected response: *"aggiunta"* if the car has been added to the station or *"non aggiunta"* if the station isn't present. <br>
     Example: (add a car with 20 of autonomy in the station 10)
     ```
-      aggiungi-auto 10 20
+    aggiungi-auto 10 20
     ```
     >**Note**: is always possible to add two car with same autonomy in the same station.
   
@@ -37,14 +37,14 @@ Given a couple of stations, the goal of the project is to find the path, from th
     Expected response: *"rottamata"* if the car has been removed from the station or *"non rottamata"* if the station or the car doesn't exist. <br>
     Example: (remove a car with 20 of autonomy from the station 10)
     ```
-      rottama-auto 10 20
+    rottama-auto 10 20
     ```
   <br>
 * ***planning-route start-station-distance end-station-distance:*** ask to find a path from start station to the end. <br>
     Expected response: the sequence of stations or *"nessun percorso"* if doesn't exist a route. <br>
     Example: (search a path from the station 10 to the station 20)
     ```
-      pianifica-percorso 10 20
+    pianifica-percorso 10 20
     ```
   <br>
 #### Simple example
@@ -154,26 +154,26 @@ We suppose the online tester is similar in to complexity of the [open_108.txt](h
 ### Our project results
 | maximums used memory | maximums used time |
 |----------------------|--------------------|
-| 0,662s               | 41 MiB             |
+| 0,589s               | 40.8 MiB           |
 ### Reproduce a local test
 On Linux:<br>
 Compile the program with the correct flags for the project:
 ```
-    cc main.c -o main -Wall -Werror -std=gnu11 -O2 -lm
+cc main.c -o main -Wall -Werror -std=gnu11 -O2 -lm
 ``` 
 
 Run the chosen test and save the result in a text file:
 ```
-    ./main < ./test/open_108.txt > open
+./main < ./test/open_108.txt > open
 ``` 
 Compare the result with the attended ones:
 ```
-    diff ./open ./test/open_111.output.txt
+diff ./open ./test/open_111.output.txt
 ``` 
 Time evaluation (not mandatory):
 ```
-    valgrind --tool=callgrind ./main < ./test/open_111.txt >open
-    kcachegrind callgrind.out."sessionCode"
+valgrind --tool=callgrind ./main < ./test/open_111.txt >open
+kcachegrind callgrind.out."sessionCode"
 ``` 
 >**Note**: the use of valgrind effect the real program performance, the online tester don't use this method to evaluate the project. <br>
 > The program speed can be also influenced by the specific machine performances.

@@ -39,7 +39,7 @@ struct Station* hashTake(int pose);
 void hashRemove(int pose);
 void printStationHash();
 
-void addCarAction(int32_t carValue, struct Station* Station);
+int addCarAction(int32_t carValue, struct Station* station, int startIndex);
 void removeCarAction(int32_t carValue, struct Station* Station);
 void removeBiggestCar(int32_t carValue, struct Station* station);
 
@@ -74,7 +74,7 @@ int main(){
 /*################################################################*/
 
 //add one or more to the given station
-void addCarSupport(struct Station* station){
+void addCarSupport(struct Station* station, int startIndex){
     char tmp;
     char* car = (char*)malloc(sizeof(char));
     int i=0;
@@ -83,15 +83,18 @@ void addCarSupport(struct Station* station){
         car[i] = tmp;
         i++;
         if(tmp == ' '){
-            addCarSupport(station); //if there is an other car to add to the same station recall the same function in a recursive way
-            break;
+            if(atoi(car)>station->biggestCar) station->biggestCar = atoi(car);
+
+            addCarSupport(station, addCarAction(atoi(car), station, startIndex)); //if there is an other car to add to the same station recall the same function in a recursive way
+            
+            free(car);
+            return;
             }
         car = (char*)realloc(car, (i+1) *sizeof(char));
     }while((tmp!='\n'));  //read the standard input until the command is finished
 
     if(atoi(car)>station->biggestCar) station->biggestCar = atoi(car);
-
-    addCarAction(atoi(car), station);
+    addCarAction(atoi(car), station, startIndex);
 
     free(car);
 }
@@ -111,7 +114,7 @@ void addStation(){ // command: "aggiungi-stazione"
             }
 
             if(tmp== ' ' && ignoreUntilSpace()!=-1){
-                addCarSupport(node);       
+                addCarSupport(node, 0);       
             }
             break;
         }
@@ -150,7 +153,7 @@ void addCar(){ // command: "aggiungi-auto"
         printf("non aggiunta\n"); 
         return;
     }
-    addCarSupport(node);
+    addCarSupport(node, 0);
 
     free(station);
     printf("aggiunta\n");
@@ -403,13 +406,15 @@ void carPrinter(struct Station* station){
 }
 
 //add the car to the first free cell in the cars' array
-void addCarAction(int32_t carValue, struct Station* station) {
+int addCarAction(int32_t carValue, struct Station* station, int startIndex) {
     if(carValue==0)carValue=-1;
-    for(int i = 0; i<carCapacity; i++){
+    int i = startIndex;
+    while(i<carCapacity){
         if(station->cars[i]==0){
             station->cars[i]=carValue;
-            return;
+            return i;
         }
+        i++;
     }
     exit(20); //exit if the array is full
 }
