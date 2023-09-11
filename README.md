@@ -113,19 +113,19 @@ When the list is completed (the algorithm has explored the entire hash table), t
  The implemented algorithm is a bit different if the path is from left to right (growingPath), or right to left (descendingPath) in terms of: order of the ordered list, insertion order in the open list. <br>
   * ***growingPath:*** growing ordered list, insertion on the end of the list.
   
-  <img src="https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/growingPath.gif" width="700"/>
+      <details>
+        <summary>animated example</summary>
+            <img src="https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/growingPath.gif" width="700"/>
+      </details><br>
   
-  * ***descendingPath:*** decreasing ordered list, custom list insertion.
-
-  <img src="https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/descendingPath.gif" width="700"/>
+  * ***descendingPath:*** decreasing ordered list, custom list insertion.<br>
+    The custom list insertion work with two pointer:
+      * ***First:*** always point the first element of the open list.
+      * ***Last:*** elements are always added in the open list on last->next. <br> this pointer doesn't move until *First* and *Last* points to the same element, when this happens *Last* moved to the last element in the open list.
 
     <details>
-        <summary>Custom list insertion:</summary>
-    
-    Work with two pointer: 
-    * ***First:*** always point the first element of the open list.
-    * ***Last:*** elements are always added in the open list on last->next. <br> this pointer doesn't move until *First* and *Last* points to the same element, when this happens *Last* moved to the last element in the open list.
-    
+        <summary>animated example</summary>
+            <img src="https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/descendingPath.gif" width="700"/>
     </details><br>
 
 * ***path's printer:*** the path is saved on the hash table in terms of previous steps, a recursive algorithm explores the path (from the end to the start) and print it.

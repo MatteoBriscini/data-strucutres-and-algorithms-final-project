@@ -305,7 +305,7 @@ struct Station* hashInsert(unsigned int pose){
         hash[hashIndex]->biggestCar = 0;
         hash[hashIndex]->next = NULL;
         hash[hashIndex]->prev = 0;
-        for(int i = 0; i<carCapacity;i++)hash[hashIndex]->cars[i]=0;
+        for(int i = 0; i<carCapacity;i++)hash[hashIndex]->cars[i]=-1;
         return hash[hashIndex];
     }
 
@@ -335,7 +335,7 @@ struct Station* hashInsert(unsigned int pose){
     hashEl->next->biggestCar = 0;
     hashEl->next->next = NULL;
     hashEl->next->prev =0;
-    for(int i = 0; i<carCapacity;i++)hashEl->next->cars[i]=0; //initialize the car array all to zero 
+    for(int i = 0; i<carCapacity;i++)hashEl->next->cars[i]=-1; //initialize the car array all to zero 
 
     return hashEl->next;
 }
@@ -400,17 +400,16 @@ void printStationHash(){
 void carPrinter(struct Station* station){
     printf("%d\n", station->pose);
     for(int i = carCapacity-1; i>=0;i--){
-       if(station->cars[i]!=0) printf("%d | ", station->cars[i]);
+       if(station->cars[i]!=-1) printf("%d | ", station->cars[i]);
     }
     printf("\n\n");
 }
 
 //add the car to the first free cell in the cars' array
 int addCarAction(int32_t carValue, struct Station* station, int startIndex) {
-    if(carValue==0)carValue=-1;
     int i = startIndex;
     while(i<carCapacity){
-        if(station->cars[i]==0){
+        if(station->cars[i]==-1){
             station->cars[i]=carValue;
             return i;
         }
@@ -421,10 +420,9 @@ int addCarAction(int32_t carValue, struct Station* station, int startIndex) {
 
 //remove the car from the cars' array if it's present
 void removeCarAction(int32_t carValue, struct Station* station){
-    if(carValue==0)carValue=-1;
     for(int i = carCapacity-1; i>=0;i--){
         if(station->cars[i]==carValue){
-            station->cars[i]=0;
+            station->cars[i]=-1;
             printf("rottamata\n");
             return;
         }
@@ -445,12 +443,11 @@ void removeBiggestCarSupport(int32_t carValue, struct Station* station, int32_t 
 
 //remove the biggest car from the cars' array, and verify if it's necessary to update the biggestCar value
 void removeBiggestCar(int32_t carValue, struct Station* station){
-    if(carValue==0)carValue=-1;
     int32_t maxValue = 0;
     for(int i = carCapacity-1; i>=0;i--){
         if(station->cars[i]!=carValue && station->cars[i]>maxValue)maxValue=station->cars[i];
         if(station->cars[i]==carValue){
-            station->cars[i]=0;
+            station->cars[i]=-1;
             printf("rottamata\n");
             
             removeBiggestCarSupport(carValue,station,maxValue,i); //have to inspect the reast of the array to find the new biggestCar value
