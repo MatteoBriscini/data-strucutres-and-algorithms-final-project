@@ -155,6 +155,9 @@ We suppose the online tester is similar in to complexity of the [open_108.txt](h
 | maximums used memory | maximums used time |
 |----------------------|--------------------|
 | 0,589s               | 40.8 MiB           |
+>**Note**: most of the time is used to read and parse the input. <br>
+> almost the 62% (in the 1080.txt test)
+
 ### Reproduce a local test
 On Linux:<br>
 Compile the program with the correct flags for the project:
@@ -168,11 +171,11 @@ Run the chosen test and save the result in a text file:
 ``` 
 Compare the result with the attended ones:
 ```
-diff ./open ./test/open_111.output.txt
+diff ./open ./test/open_108.output.txt
 ``` 
 Time evaluation (not mandatory):
 ```
-valgrind --tool=callgrind ./main < ./test/open_111.txt >open
+valgrind --tool=callgrind ./main < ./test/open_108.txt >open
 kcachegrind callgrind.out."sessionCode"
 ``` 
 >**Note**: the use of valgrind effect the real program performance, the online tester don't use this method to evaluate the project. <br>
