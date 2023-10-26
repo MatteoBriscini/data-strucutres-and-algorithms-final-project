@@ -142,7 +142,7 @@ When the list is completed (the algorithm has explored the entire hash table), t
 For the project evaluation has been used an online tester based on unknown test case, any way the professor supported the project with 111 testing files (reported [here](https://github.com/MatteoBriscini/API_project/tree/master/test)). <br>
 We suppose the online tester is similar in to complexity of the [open_108.txt](https://github.com/MatteoBriscini/API_project/blob/master/test/open_108.txt) test case.
 
-| Evaluation | maximums used memory | maximums used time |
+| Evaluation | maximums used time | maximums used memory |
 |------------|----------------------|--------------------|
 | 18         | 19,0s                | 128 MiB            |
 | 21         | 15,0s                | 118 MiB            |
@@ -152,7 +152,7 @@ We suppose the online tester is similar in to complexity of the [open_108.txt](h
 | 30_lode    | 1,0s                 | 78 MiB             |
 
 ### Our project results
-| maximums used memory | maximums used time |
+| maximums used time | maximums used memory |
 |----------------------|--------------------|
 | 0,589s               | 40.8 MiB           |
 >**Note**: most of the time is used to read and parse the input. <br>
