@@ -1,5 +1,5 @@
 # API_project
-** Politecnico of Milan [2022-2023]
+*** Politecnico of Milan [2022-2023]
 ## Project requirements
 Considering a highway as a sequence of service stations, each station is  identified by the distance from the start of the highway, the highway is runnable in both directions. <br>
 Each station has some vehicles (caraterized by the autonomy of battery), with limitation of 512 cars for a single station. <br> 
