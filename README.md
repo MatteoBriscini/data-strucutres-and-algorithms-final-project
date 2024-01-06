@@ -1,4 +1,4 @@
-# API_project
+# DATA STRUCTURE AND ALGORITHM FINAL PROJECT
 ***Politecnico of Milan [2022-2023]***
 ## Project requirements
 Considering a highway as a sequence of service stations, each station is  identified by the distance from the start of the highway, the highway is runnable in both directions. <br>
