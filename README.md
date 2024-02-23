@@ -10,7 +10,7 @@ Given a couple of stations, the goal of the project is to find the best path, wi
 If there is more than one path, with the same number of stops, the algorithms have to choose, from right to left, the path with smaller id station value. <br><br>
 
 *example: 10-50-***60***-90 is better than 10-30-***85***-90, because 60<85.*
-
+<br>
 
 >**Note**: you can find the official requirements: [here](https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/api_technicalSpecification.pdf).
 ### Command and expected response
