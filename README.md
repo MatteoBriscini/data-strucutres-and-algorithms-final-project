@@ -17,9 +17,10 @@ If there is more than one path, with the same number of stops, the algorithms ha
 ### Command and expected response
 
 * ***Add a new station:*** Add a station on the specified position. <br>
-    Expected response: *"aggiunta"* if the station is added or *"non aggiunta"* if the station is already present. <br><br>
+    <code style="color : green">Expected response:</code> *"aggiunta"* if the station is added or *"non aggiunta"* if the station is already present. 
+    <code style="color : green">syntax:</code> aggiungi-stazione <station_id> [<car_number> (<car_id>)<sup>+</sup>]  <br><br>
 
-    Example: (add a station on the position 10 with 3 cars)
+    **Example**: (add a station on the position 10 with 3 cars)
     ```
     aggiungi-stazione 10 3 100 200 300
     ```
