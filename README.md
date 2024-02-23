@@ -7,9 +7,9 @@ In each station some vehicles are parked, with the limitation of 512 cars for a 
 All the vehicles are characterized by the autonomy of their battery,  <br> 
 A trip is identified by a sequence of stations where a driver stops; assuming as a hypothesis that the driver changes the car each time he stops in a station, and he can't change direction during his trip. <br>
 Given a couple of stations, the goal of the project is to find the best path, with fewer stops possible. <br>
-If there is more than one path, with the same number of stops, the algorithms have to choose, from right to left, the path with smaller id station value. <br><br>
+If there is more than one path, with the same number of stops, the algorithms have to choose, from right to left, the path with smaller id station value. <br>
 
-*example: 10-50-***60***-90 is better than 10-30-***85***-90, because 60<85.*
+*$${\color{green}example:}\space\space 10-50-{\color{orange}60}-90\space\space is \space better \space than \space\space 10-30-{\color{orange}85}-90, \space\space because \space 60<85.$$*
 <br>
 
 >**Note**: you can find the official requirements: [here](https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/api_technicalSpecification.pdf).
@@ -17,11 +17,14 @@ If there is more than one path, with the same number of stops, the algorithms ha
 
 * ***Add a new station:*** Add a station on the specified position. <br>
     Expected response: *"aggiunta"* if the station is added or *"non aggiunta"* if the station is already present. <br>
+
     Example: (add a station on the position 10 with 3 cars)
     ```
     aggiungi-stazione 10 3 100 200 300
-    //Add-station distance cars-number car1-autonomy car2-autonomy car3-autonomy
     ```
+
+    <br>
+
     >**Note**: this project is a part of an italian course, so commands are written in italian.
   <br>
 * ***Remove-station distance:*** remove the station at the specified distance and all cars in that station. <br>
