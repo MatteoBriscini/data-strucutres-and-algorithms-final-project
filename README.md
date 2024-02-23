@@ -37,7 +37,7 @@ If there is more than one path, with the same number of stops, the algorithms ha
     demolisci-stazione 10
     ```
   <br>
-* ***Add-car station-distance car-autonomy:*** add a car with specified autonomy to the specified station. <br><br>
+* ***Add a new car*** add a car with specified autonomy to the specified station. <br><br>
     <code style="color : green">Expected response:</code> *"aggiunta"* if the car has been added to the station or *"non aggiunta"* if the station isn't present. <br>
     <code style="color : green">syntax:</code> aggiungi-auto <station_id> <car_id><br><br>
     Example: (add a car with 20 of autonomy in the station 10)
@@ -47,7 +47,7 @@ If there is more than one path, with the same number of stops, the algorithms ha
     >**Note**: is always possible to add two car with same autonomy in the same station.
   
     <br>
-* ***Remove-car station-distance car-autonomy:*** remove a car with specified autonomy from the specified station. <br><br>
+* ***Remove a car*** remove a car with specified autonomy from the specified station. <br><br>
     <code style="color : green">Expected response:</code> *"rottamata"* if the car has been removed from the station or *"non rottamata"* if the station or the car doesn't exist. <br>
     <code style="color : green">syntax:</code> rottama-auto <station_id> <car_id><br><br>
     Example: (remove a car with 20 of autonomy from the station 10)
@@ -55,7 +55,7 @@ If there is more than one path, with the same number of stops, the algorithms ha
     rottama-auto 10 20
     ```
   <br>
-* ***planning-route start-station-distance end-station-distance:*** ask to find a path from start station to the end. <br><br>
+* ***planning the route*** ask to find a path from the specified start station to the destination one. <br><br>
     <code style="color : green">Expected response:</code> the sequence of stations or *"nessun percorso"* if doesn't exist a route. <br>
     <code style="color : green">syntax:</code> pianifica-percorso <station_id> <station_id><br><br>
     Example: (search a path from the station 10 to the station 20)
