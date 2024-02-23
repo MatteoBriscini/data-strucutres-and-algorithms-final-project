@@ -8,9 +8,9 @@ All the vehicles are characterized by the autonomy of their battery,  <br>
 A trip is identified by a sequence of stations where a driver stops; assuming as a hypothesis that the driver changes the car each time he stops in a station, and he can't change direction during his trip. <br>
 Given a couple of stations, the goal of the project is to find the best path, with fewer stops possible. <br>
 If there is more than one path, with the same number of stops, the algorithms have to choose, from right to left, the path with smaller id station value. <br><br>
-```
-example: 10-50-***60***-90 is better than 10-30-***85***-90, because 60<85.
-```
+
+*example: 10-50-***60***-90 is better than 10-30-***85***-90, because 60<85.*
+
 
 >**Note**: you can find the official requirements: [here](https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/api_technicalSpecification.pdf).
 ### Command and expected response
