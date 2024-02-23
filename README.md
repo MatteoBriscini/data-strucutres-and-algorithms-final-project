@@ -16,7 +16,7 @@ If there is more than one path, with the same number of stops, the algorithms ha
 >**Note**: you can find the official requirements: [here](https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/api_technicalSpecification.pdf).
 ### Command and expected response
 
-* ***Add a new station:*** Add a station on the specified position. <br>
+* ***Add a new station:*** Add a station on the specified position. <br><br>
     <code style="color : green">Expected response:</code> *"aggiunta"* if the station is added or *"non aggiunta"* if the station is already present.<br>
     <code style="color : green">syntax:</code> aggiungi-stazione <station_id> [<car_number> (<car_id>)<sup>+</sup>]  <br><br>
 
@@ -29,15 +29,17 @@ If there is more than one path, with the same number of stops, the algorithms ha
 
     >**Note**: this project is a part of an italian course, so commands are written in italian.
   <br>
-* ***Remove the n station:*** remove the station at the specified distance and all cars in that station. <br>
-    Expected response: *"demolita"* if the station has been removed or *"non demolita"* if the station isn't present. <br><br>
-    Example:
+* ***Remove the n station:*** remove the station at the specified distance and all cars in that station. <br><br>
+    <code style="color : green">Expected response:</code> *"demolita"* if the station has been removed or *"non demolita"* if the station isn't present. <br>
+    <code style="color : green">syntax:</code> demolisci-stazione <station_id> <br><br>
+    **Example**:
     ```
     demolisci-stazione 10
     ```
   <br>
-* ***Add-car station-distance car-autonomy:*** add a car with specified autonomy to the specified station. <br>
-    Expected response: *"aggiunta"* if the car has been added to the station or *"non aggiunta"* if the station isn't present. <br>
+* ***Add-car station-distance car-autonomy:*** add a car with specified autonomy to the specified station. <br><br>
+    <code style="color : green">Expected response:</code> *"aggiunta"* if the car has been added to the station or *"non aggiunta"* if the station isn't present. <br>
+    <code style="color : green">syntax:</code> aggiungi-auto <station_id> <car_id><br><br>
     Example: (add a car with 20 of autonomy in the station 10)
     ```
     aggiungi-auto 10 20
@@ -45,15 +47,17 @@ If there is more than one path, with the same number of stops, the algorithms ha
     >**Note**: is always possible to add two car with same autonomy in the same station.
   
     <br>
-* ***Remove-car station-distance car-autonomy:*** remove a car with specified autonomy from the specified station. <br>
-    Expected response: *"rottamata"* if the car has been removed from the station or *"non rottamata"* if the station or the car doesn't exist. <br>
+* ***Remove-car station-distance car-autonomy:*** remove a car with specified autonomy from the specified station. <br><br>
+    <code style="color : green">Expected response:</code> *"rottamata"* if the car has been removed from the station or *"non rottamata"* if the station or the car doesn't exist. <br>
+    <code style="color : green">syntax:</code> rottama-auto <station_id> <car_id><br><br>
     Example: (remove a car with 20 of autonomy from the station 10)
     ```
     rottama-auto 10 20
     ```
   <br>
-* ***planning-route start-station-distance end-station-distance:*** ask to find a path from start station to the end. <br>
-    Expected response: the sequence of stations or *"nessun percorso"* if doesn't exist a route. <br>
+* ***planning-route start-station-distance end-station-distance:*** ask to find a path from start station to the end. <br><br>
+    <code style="color : green">Expected response:</code> the sequence of stations or *"nessun percorso"* if doesn't exist a route. <br>
+    <code style="color : green">syntax:</code> pianifica-percorso <station_id> <station_id><br><br>
     Example: (search a path from the station 10 to the station 20)
     ```
     pianifica-percorso 10 20
