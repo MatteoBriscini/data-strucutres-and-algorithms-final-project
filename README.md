@@ -14,13 +14,15 @@ If there is more than one path, with the same number of stops, the algorithms ha
 
 >**Note**: you can find the official requirements: [here](https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/api_technicalSpecification.pdf).
 ### Command and expected response
->**Note**: this project is a part of an italian course, so commands are written in italian.
-* ***Add-station distance cars-number car1-autonomy.... carN-autonomy:*** add a station on the specified position. <br>
+
+* ***Add a new station:*** Add a station on the specified position. <br>
     Expected response: *"aggiunta"* if the station is added or *"non aggiunta"* if the station is already present. <br>
     Example: (add a station on the position 10 with 3 cars)
     ```
     aggiungi-stazione 10 3 100 200 300
+    //Add-station distance cars-number car1-autonomy car2-autonomy car3-autonomy
     ```
+    >**Note**: this project is a part of an italian course, so commands are written in italian.
   <br>
 * ***Remove-station distance:*** remove the station at the specified distance and all cars in that station. <br>
     Expected response: *"demolita"* if the station has been removed or *"non demolita"* if the station isn't present. <br>
