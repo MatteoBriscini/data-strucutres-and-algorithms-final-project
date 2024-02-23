@@ -9,14 +9,15 @@ A trip is identified by a sequence of stations where a driver stops; assuming as
 Given a couple of stations, the goal of the project is to find the best path, with fewer stops possible. <br>
 If there is more than one path, with the same number of stops, the algorithms have to choose, from right to left, the path with smaller id station value. <br>
 
-*$${\color{green}example:}\space\space 10-50-{\color{orange}60}-90\space\space is \space better \space than \space\space 10-30-{\color{orange}85}-90, \space\space because \space 60<85.$$*
+
+<code style="color : green">example:</code> 0-50-***60***-90 is better than 10-30-***85***-90, because 60<85*
 <br>
 
 >**Note**: you can find the official requirements: [here](https://github.com/MatteoBriscini/API_project/blob/master/Deliveries/api_technicalSpecification.pdf).
 ### Command and expected response
 
 * ***Add a new station:*** Add a station on the specified position. <br>
-    Expected response: *"aggiunta"* if the station is added or *"non aggiunta"* if the station is already present. <br>
+    Expected response: *"aggiunta"* if the station is added or *"non aggiunta"* if the station is already present. <br><br>
 
     Example: (add a station on the position 10 with 3 cars)
     ```
@@ -27,8 +28,8 @@ If there is more than one path, with the same number of stops, the algorithms ha
 
     >**Note**: this project is a part of an italian course, so commands are written in italian.
   <br>
-* ***Remove-station distance:*** remove the station at the specified distance and all cars in that station. <br>
-    Expected response: *"demolita"* if the station has been removed or *"non demolita"* if the station isn't present. <br>
+* ***Remove the n station:*** remove the station at the specified distance and all cars in that station. <br>
+    Expected response: *"demolita"* if the station has been removed or *"non demolita"* if the station isn't present. <br><br>
     Example:
     ```
     demolisci-stazione 10
